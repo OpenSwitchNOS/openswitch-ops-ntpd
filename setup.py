@@ -18,8 +18,10 @@ from setuptools import setup
 setup(
     name='ops_ntpd',
     version='1.0',
-    py_modules=['ops_ntpd'],
+    py_modules=['ops_ntpd', 'ops_ntpd_sync_to_ovsdb'],
     entry_points={
-        'console_scripts': ['ops_ntpd = ops_ntpd:main']
+        'console_scripts': ['ops_ntpd = ops_ntpd:ops_ntpd_init',
+                            'ops_ntpd_sync_to_ovsdb = \
+                    ops_ntpd_sync_to_ovsdb:ops_ntpd_sync_mgr_run']
     }
 )
