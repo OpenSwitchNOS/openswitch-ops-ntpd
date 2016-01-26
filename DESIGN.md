@@ -8,8 +8,8 @@
   - [OVSDB Representation](#ovsdb-representation)
   - [NTP global configuration](#ntp-configuration)
   - [NTP global statistics](#ntp-statistics)
-  - [NTP Associations table](#ntp-associations-table)
-  - [NTP Keys table](#ntp-keys-table)
+  - [NTP Association table](#ntp-associations-table)
+  - [NTP Key table](#ntp-keys-table)
 - [Design choices](#design-choices)
   - [Open source repository](#design-choice-open-source-repository)
 - [References](#references)
@@ -34,16 +34,16 @@
 ```
 The NTP client feature provides the Network Time Protocol client functionality which synchronize information from NTP servers. OpenSwitch uses open source classic `ntpd` for NTP functionality. Classic `ntpd` provides both server and client functionality. But we are using it only in NTP client mode.
 
-`ops-ntpd` daemon manages `ntpd` and sends configuration information using `ntpq`. Periodically the `ops-ntpd` python daemon would poll and update status information for the associations with the OVSDB. This is the association status information used for **show ntp associations".
+`ops-ntpd` python daemon manages `ntpd` and sends configuration information using `ntpq`. Periodically the `ops-ntpd` python daemon would poll and update status information for the associations with the OVSDB. This is the association status information used for **show NTP Association".
 
 By enabling NTP Authentication, the `ntpd` daemon would start using the trusted keyid information configured with the association to do authenticate the server and use only those servers for synchronizing time.
 
 ###Configuration workflow
-* When using NTP client, the operator would be configuring NTP associations(servers) to be used by the NTP client to synchronize time information. This configuration specific to NTP client is maintained in OVSDB. The user configuration for NTP client are updated in OVSDB through CLI and REST daemons.
+* When using NTP client, the operator would be configuring NTP Association(servers) to be used by the NTP client to synchronize time information. This configuration specific to NTP client is maintained in OVSDB. The user configuration for NTP client are updated in OVSDB through CLI and REST daemons.
 * The NTP client python daemon monitors the OVSDB for any configuration changes specific to NTP client and if there are any configuration changes, the `ops-ntpd` python daemon communicates the updates to `ntpd` using `ntpq`.
 
 ###Show information workflow
-* `ops-ntpd` daemon periodically updates the status information with `ntpd` (using `ntpq`) about the NTP associations into OVSDB. This information is used to display when a call to `show ntp associations` is made.
+* `ops-ntpd` daemon periodically updates the status information with `ntpd` (using `ntpq`) about the NTP Association into OVSDB. This information is used to display when a call to `show NTP Association` is made.
 * `ops-ntpd` daemon also updates the system info and statistics information about `ntpd` daemon which can be used for debugging purposes.
 * `ntpd` updates a log file whose output is displayed by issuing the `show ntp logging`.
 
@@ -65,7 +65,7 @@ The OVSDB is the central database used in OpenSwitch. All the communication betw
   |                                         |               |
   |                                         |               |
   |   +--------------------+        +-------+----------+    |
-  |   |     NTP KEYS       |        |      NTP         |    |
+  |   |     NTP Key       |        |      NTP         |    |
   |   |                    <--------+   ASSOCIATIONS   |    |
   |   |   key id           |        |                  |    |
   |   |   key trust conf   |        | configuration    |    |
@@ -96,8 +96,8 @@ The following key=value pair mappings are used in NTP statistics column of Syste
 * The key **ntp\_pkts\_rate\_limited** would keep statistics about the number of packets discarded due to rate limitation.
 * The key **ntp\_pkts\_kod\_responses** would keep statistics about the number of KoD packets from the server.
 
-###NTP Associations table
-The NTP Associations table has the following columns:
+###NTP Association table
+The NTP Association table has the following columns:
 
 ```
 Name
@@ -106,8 +106,8 @@ Vrf
 Association Attributes
 Association Status
 ```
-- **name**: FQDN or ip address for the association..
-- **key**: This column has a weak reference to the NTP Keys table.
+- **address**: FQDN or ip address for the association..
+- **key_id**: This column has a reference to the NTP Key table.
 - **vrf**: This column has a weak reference to the VRF table.
 - **association_attributes**: This column has key=value pairs mapping of association status information. The following key=value pair mappings are used:
   * The key **ref\_clock_id** stores the refclock driver ID, if available a refclock driver ID like "127.127.1.0" for non uni/multi/broadcast associations
@@ -116,27 +116,44 @@ for this association.
   * The key **ntp_version** stores the NTP version to use for when communicating with this association.
 
 - **association_status**: This column has key=value pairs mapping of association status information. The following key=value pair mappings are used:
-  * The key **remote\_peer_address** stores the remote peer or server being synced to.
-  * The key **remote\_peer\_sync_info** stores Where or what the remote peer or server is itself synchronised to;
+      
+      <column name="association_status" key="reference_time">
+        Provides the time (in "day, month date year hh:mm" format)
+        when the server clock of refid was last adjusted.
+        Eg format Wed, Jan 13 2016  7:56:26.126
+      </column>
+      <column name="association_status" key="peer_status_word"
+        type='{"type": "string", "enum": ["set", ["reject",
+        "falsetick", "excess", "outlier", "pps_peer",
+        "candidate", "backup", "system_peer"]]}'>
+        Provides information about the peer status.
+        Refer to link for more info
+        <code>https://www.eecis.udel.edu/~mills/ntp/html/decode.html#peer</code>
+      </column>
+      <column name="association_status" key="associd">
+        Provides the Association ID mapped for this association.
+        This is an Internal ID.
+      </column>
+  * The key **remote\_peer_address** stores the remote peer's ip address being synced to. If FQDN is used as "address" during config, then this would be the ip address.
+  * The key **remote\_peer\_ref\_id** stores the reference id used by the remote peer. This can be either another server or stratum 1 devices like .GPS. .USNO. etc.
   * The key **stratum** stores remote peer or server Stratum
   * The key **peer_type** stores the type (u: unicast or manycast client,
     b: broadcast or multicast client, l: local reference clock, s: symmetric peer,
     A: manycast server, B: broadcast server, M: multicast server
-  * The key **last\_polled** stores when last polled (seconds ago, 'h' hours ago, or 'd' days ago);
-  * The key **polling_interval** stores the polling frequency
-  * The key **reachability_register** stores the 8-bit left-shift shift register value recording polls
+  * The key **last\_polled** stores when last polled (seconds ago, 'h' hours ago, or 'd' days ago). Example 6h, 5d, 5 (this refers to seconds).
+  * The key **polling_interval** stores the polling frequency (in seconds) used for this peer.
+  * The key **reachability_register** stores status about the last consequetive polls for this peer. (1 bit per poll)
   * The key **network_delay** stores the round trip communication delay to the remote peer or server
   (milliseconds)
-  * The key **time_offset** stores the Mean offset (phase) in the times reported between this local
-  host and the remote peer or server (RMS, milliseconds);
-  * The key **jitter** stores the Mean deviation (jitter) in the time reported for that remote
-  peer or server (milliseconds)
-  * The key **system\_status_word** stores the saves the Leap field, source field and event field info
-  * The key **root_dispersion** stores the total dispersion to the primary reference clock
+  * The key **time_offset** stores the Root Mean Square time (in milliseconds) between this local host and the remote peer or server.
+  * The key **jitter** stores jitter (in milliseconds) in the time reported for that remote peer or server.
+  * The key **reference_time** stores the time (in "day, month date year hh:mm" format) when the server clock of refid was last adjusted. Eg format Wed, Jan 13 2016  7:56:26.126
+  * The key **root_dispersion** stores maximum error relative time (in seconds) to primary reference clock.
+  * The key **peer_status_word** stores information about the peer status. It can be either a candidate or a system selected peer. It can take on other states like 'reject', 'falsetick', 'excess', 'outlier', 'pps_peer'.
   * The key **associd** stores the Association ID for the peer. This is an Internal ID.
 
-###NTP Keys table
-The NTP Keys table has the following columns:
+###NTP Key table
+The NTP Key table has the following columns:
 
 ```
 Key Id
@@ -160,5 +177,5 @@ There are multiple open source choices available for the NTP. The open source fr
 * The NTP Project also drives standards and formalies RFCs for newer implementations, also provides maintainance releases for common zero day issues.
 
 ##References
-* [NTP info](http://doc.ntp.org/)
-* [NTPQ info](http://doc.ntp.org/4.2.6p5/debug.html)
+* [NTP references](http://doc.ntp.org/)
+* [NTPQ references](http://doc.ntp.org/4.2.6p5/debug.html)
