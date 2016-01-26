@@ -217,7 +217,7 @@ def ops_ntpd_setup_ntpq_integration(ntp_working_dir_path):
     filepath = ntp_working_dir_path + "ntp.keys"
     for line in ops_ntpd_get_file_contents(filepath):
         if line.endswith("# MD5 key\n"):
-            controlkey_answer = line.strip().split()[2]
+            controlkey_answer = line.strip().split()[2][:16]
             break
     os.system("rm -rf %s/*;"%ntp_working_dir_path)
     ntpq_info = (controlkey, controlkey_answer)
@@ -559,7 +559,7 @@ def ops_ntpd_check_updates_from_ovsdb():
     ovs_rec = None
     associd = 0
     vlog.info("ops_ntpd_check_updates_from_ovsdb")
-    authentication_enable = False
+    authentication_enable = "false" 
 
     update_map = {}
     #Get the NTP association configuration changes
@@ -611,7 +611,7 @@ def ops_ntpd_check_updates_from_ovsdb():
             trust_enable = ovs_rec.trust_enable
         vlog.dbg("trust_enable is %s and auth is %s"%(trust_enable, \
                 authentication_enable))
-        if trust_enable == True and authentication_enable == True:
+        if trust_enable == True and authentication_enable == "true":
             ops_ntpd_setup_ntp_key_map(update_map, \
                     key_id, key_password, trust_enable)
     key_configs, keys_file_content = \
