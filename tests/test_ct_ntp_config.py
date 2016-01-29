@@ -17,7 +17,7 @@
 
 import pytest
 import re
-from  opstestfw import *
+from opstestfw import *
 from opstestfw.switch.CLI import *
 from opstestfw.switch import *
 from opsvsi.docker import *
@@ -44,7 +44,7 @@ class myTopo(Topo):
             switch = self.addSwitch('s%s' % s)
 
 class ntpConfigTest(OpsVsiTest):
-        def setupNet(self):
+	def setupNet(self):
             self.net = Mininet(topo=myTopo(hsts=0, sws=1,
                                        hopts=self.getHostOpts(),
                                        sopts=self.getSwitchOpts()),
@@ -53,15 +53,119 @@ class ntpConfigTest(OpsVsiTest):
                                        link=OpsVsiLink, controller=None,
                                        build=True)
 
-        def ntpConfig(self):
+	def ntpConfig(self):
+            info('\n### NTP CTs started ###\n')
             info('\n### Configure different ntp associations ###\n')
-            s1 = self.net.switches[0]
+	    s1 = self.net.switches[0]
             s1.cmdCLI("configure terminal")
             s1.cmdCLI("ntp server %s" % SERVER1)
             s1.cmdCLI("ntp server %s" % SERVER2)
             s1.cmdCLI("ntp server %s prefer" % SERVER3)
             s1.cmdCLI("ntp server %s version 3" % SERVER4)
             s1.cmdCLI("exit")
+
+        def testNtpAuthEnableDisableConfig(self):
+            info('\n### Authentication enable disable test START ###\n')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp authentication enable")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp status")
+            lines = dump.split('\n')
+            count = 0
+            for line in lines:
+               if "NTP Authentication has been enabled" in line:
+                  info('\n### authentication has been enabled as per "show ntp status" ###\n')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if "ntp authentication enable" in line:
+                  info('\n### NTP authentication has been enabled as per "show running-config" ###\n')
+                  count = count + 1
+
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("no ntp authentication enable")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp status")
+            lines = dump.split('\n')
+            for line in lines:
+               if "NTP Authentication has been disabled" in line:
+                  info('\n### authentication has been disabled as per "show ntp status" ###\n')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            sleep(2)
+            count = count + 1
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               info("%s" % line)
+               if "ntp authentication enable" in line:
+                  info('\n### enable authentication test failed in show running-config verification\n')
+                  count = count - 1
+
+            assert count == 4, \
+                   info('\n### Authentication config: Tests failed!!###\n')
+
+        def testNtpValidAuthKeyAdd(self):
+            info('\n### Valid Auth-Key addition test ###\n')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp authentication-key 10 md5 password10")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp authentication-keys")
+            lines = dump.split('\n')
+            count = 0
+            for line in lines:
+               info("%s\n" % line)
+               if ("10" in line and "password10" in line):
+                  info('\n### Valid auth-key found in output of the show CLI\n')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if "ntp authentication-key 10 md5 password10" in line:
+                  info('\n### Valid auth-key found in running-config\n')
+                  count = count + 1
+
+            assert count == 2, \
+                   info('\n### Valid auth-key addition test FAILED!! ###\n')
+
+            info('\n### Valid auth-key addition test PASSED!! ###\n')
+
+        def testNtpValidAuthKeyDelete(self):
+            info('\n### Auth-Key deletion test ###\n')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("no ntp authentication-key 10")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp authentication-keys")
+            lines = dump.split('\n')
+            count = 1
+            for line in lines:
+               info("%s\n" % line)
+               if ("10" in line and "password10" in line):
+                  info('\n### Deleted key still found in OVSDB\n')
+                  count = count - 1
+
+            ''' Now check the running config '''
+            count = count + 1
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if "ntp authentication-key 10 md5 password10" in line:
+                  info('\n### auth-key found in running-config inspite of deleting it\n')
+                  count = count - 1
+
+            assert count == 2, \
+                   info('\n### Valid auth-key deletion test FAILED!!###\n')
+
+            info('\n### Valid auth-key deletion test PASSED!!###\n')
 
         def testNtpAssociationsConfig(self):
             info('\n### Verify ntp associations table ###\n')
@@ -111,106 +215,10 @@ class ntpConfigTest(OpsVsiTest):
 
             info('\n### no ntp server tests unsuccessful : Test passed### \n')
 
-        def testNtpAuthConfig(self):
-            info('\n### Authentication config test###\n')
-            s1 = self.net.switches[0]
-            s1.cmdCLI("configure terminal")
-            s1.cmdCLI("ntp authentication enable")
-            s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp status")
-            lines = dump.split('\n')
-            count = 0
-            for line in lines:
-               if "NTP Authentication has been enabled" in line:
-                  info('\n### enable authentication test successful\n')
-                  count = count + 1
-
-            s1.cmdCLI("configure terminal")
-            s1.cmdCLI("no ntp authentication enable")
-            s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp status")
-            lines = dump.split('\n')
-            for line in lines:
-               if "NTP Authentication has been disabled" in line:
-                  info("\n### disable authentication test successful \n")
-                  count = count + 1
-
-            assert count == 2, \
-                   info('\n### Authentication config: Tests failed!!###\n')
-
-        def testNtpAuthTrustKeys(self):
-            info('\n### Authentication config test###\n')
-            s1 = self.net.switches[0]
-            s1.cmdCLI("configure terminal")
-            s1.cmdCLI("ntp authentication-key %s md5 mypassword" % keyid)
-            s1.cmdCLI("ntp trusted-key %s" % keyid)
-            s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp authentication-keys")
-            lines = dump.split('\n')
-            count = 0
-            for line in lines:
-                if keyid in line:
-                   info("\n#### authentication key added successfully ###\n")
-                   count = count + 1
-
-            dump = s1.cmdCLI("show ntp trusted-keys")
-            lines = dump.split('\n')
-            for line in lines:
-                if keyid in line:
-                   info("\n####Trusted  key added successfully ###\n")
-                   count = count + 1
-
-            s1.cmdCLI("configure terminal")
-            s1.cmdCLI("no ntp authentication-key %s md5 mypassword" % keyid)
-            s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp authentication-keys")
-            lines = dump.split('\n')
-            for line in lines:
-                if keyid in line:
-                   info("\n#### authentication key removed unsuccessful ###\n")
-                   count = count - 1
-
-
-            assert count == 2, \
-                   info('\n### Auth and trusted key : Tests failed!!! ###\n')
-
-            info('\n### Auth and trusted key : Tests passed!!! ###\n')
-
-        def testNtpTrustedKeyConf(self):
-            info('\n### Authentication config test###\n')
-            s1 = self.net.switches[0]
-            s1.cmdCLI("configure terminal")
-            s1.cmdCLI("ntp authentication-key %s md5 mypassword" % keyid)
-            s1.cmdCLI("ntp trusted-key %s" % keyid)
-            s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp trusted-keys")
-            count = 0
-            lines = dump.split('\n')
-            for line in lines:
-                if keyid in line:
-                   info("\n####Trusted  key added successfully : Test passed!!!###\n")
-                   count = count + 1
-
-            assert count == 1,\
-                   info("\n### Trusted key addition test failed!!!###\n")
-
-            s1.cmdCLI("configure terminal")
-            s1.cmdCLI("no ntp trusted-key %s" % keyid)
-            s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp trusted-keys")
-            lines = dump.split('\n')
-            count = 0
-            for line in lines:
-                if keyid in line:
-                   info("\n####Trusted  key remove test failed ###\n")
-                   count = count + 1
-
-            assert count == 0, \
-                   info("\n### Trusted key removed successfully: Test passed###\n")
 
 class TestNtpConfig:
 
-        def setup(self):
+	def setup(self):
             pass
 
         def teardown(self):
@@ -230,9 +238,8 @@ class TestNtpConfig:
         def testNtpFull(self):
             info('\n########## Test NTP configuration ##########\n')
             self.ntpConfigTest.ntpConfig()
+            self.ntpConfigTest.testNtpAuthEnableDisableConfig()
+            self.ntpConfigTest.testNtpValidAuthKeyAdd()
             self.ntpConfigTest.testNtpAssociationsConfig()
             self.ntpConfigTest.testUnconfigureNtpServers()
-            self.ntpConfigTest.testNtpAuthConfig()
-            self.ntpConfigTest.testNtpAuthTrustKeys()
-            self.ntpConfigTest.testNtpTrustedKeyConf()
             info('\n########## End of test NTP configuration configuration ##########\n')

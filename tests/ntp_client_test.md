@@ -34,8 +34,10 @@ Verify that NTP Authentication gets disabled/enabled
 ### Description ###
 1. Disable NTP authentication
 2. Check the output of "show ntp status" to confirm
-3. Enable NTP authentication
-4. Check the output of "show ntp status" to confirm
+3. Check it is not present in the output for "show running config"
+4. Enable NTP authentication
+5. Check the output of "show ntp status" to confirm
+6. Confirm thst it is present in the output for "show running config"
 ### Test Result Criteria
 #### Test Pass Criteria
 All verifications succeed.
@@ -60,6 +62,24 @@ Verify addition of NTP Authentication Key in the valid range with a valid passwo
 NTP authentication key gets displayed as part of "show ntp authentication-keys"
 #### Test Fail Criteria
 NTP authentication key is absent from the output of "show ntp authentication-keys"
+
+## Test authentication key deletion (valid key)
+### Objective
+Verify deletion of a previously added NTP Authentication Key
+### Requirements
+ - Virtual Mininet Test Setup
+### Setup
+#### Topology Diagram
+```
+[s1]
+```
+### Description ###
+Delete the authentication key added using the earlier test
+### Test Result Criteria
+#### Test Pass Criteria
+NTP authentication key is not displayed as part of "show ntp authentication-keys"
+#### Test Fail Criteria
+NTP authentication key is present in the output of "show ntp authentication-keys"
 
 ## Test authentication key addition (invalid key)
 ### Objective
