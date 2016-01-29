@@ -34,8 +34,10 @@ Verify that NTP Authentication gets disabled/enabled
 ### Description ###
 1. Disable NTP authentication
 2. Check the output of "show ntp status" to confirm
-3. Enable NTP authentication
-4. Check the output of "show ntp status" to confirm
+3. Check it is not present in the output for "show running config"
+4. Enable NTP authentication
+5. Check the output of "show ntp status" to confirm
+6. Confirm thst it is present in the output for "show running config"
 ### Test Result Criteria
 #### Test Pass Criteria
 All verifications succeed.
@@ -61,6 +63,24 @@ NTP authentication key gets displayed as part of "show ntp authentication-keys"
 #### Test Fail Criteria
 NTP authentication key is absent from the output of "show ntp authentication-keys"
 
+## Test authentication key deletion (valid key)
+### Objective
+Verify deletion of a previously added NTP Authentication Key
+### Requirements
+ - Virtual Mininet Test Setup
+### Setup
+#### Topology Diagram
+```
+[s1]
+```
+### Description ###
+Delete the authentication key added using the earlier test
+### Test Result Criteria
+#### Test Pass Criteria
+NTP authentication key is not displayed as part of "show ntp authentication-keys"
+#### Test Fail Criteria
+NTP authentication key is present in the output of "show ntp authentication-keys"
+
 ## Test authentication key addition (invalid key)
 ### Objective
 Verify addition of NTP Authentication Key outside the valid range fails
@@ -79,7 +99,7 @@ NTP authentication key is absent from the output of "show ntp authentication-key
 #### Test Fail Criteria
 NTP authentication key gets displayed as part of "show ntp authentication-keys"
 
-## Test authentication key addition (invalid password)
+## Test authentication key addition (invalid password - short)
 ### Objective
 Verify addition of NTP Authentication Key with an incorrect password fails
 ### Requirements
@@ -90,7 +110,25 @@ Verify addition of NTP Authentication Key with an incorrect password fails
 [s1]
 ```
 ### Description ###
-1. Add NTP Authentication key with a password lesser than 8 characters
+1. Add NTP Authentication key with a password of length lesser than 8 characters
+### Test Result Criteria
+#### Test Pass Criteria
+NTP authentication key is absent from the output of "show ntp authentication-keys"
+#### Test Fail Criteria
+NTP authentication key gets displayed as part of "show ntp authentication-keys"
+
+## Test authentication key addition (invalid password - too long)
+### Objective
+Verify addition of NTP Authentication Key with an incorrect password fails
+### Requirements
+ - Virtual Mininet Test Setup
+### Setup
+#### Topology Diagram
+```
+[s1]
+```
+### Description ###
+1. Add NTP Authentication key with a password of length greater than 16 characters
 ### Test Result Criteria
 #### Test Pass Criteria
 NTP authentication key is absent from the output of "show ntp authentication-keys"
@@ -109,7 +147,7 @@ Verify addition of NTP server with just the server IP/FQDN succeeds
 ```
 ### Description ###
 1. Add NTP server using just the IPV4 address
-1. Add NTP server using just the FQDN
+or Add NTP server using just the FQDN
 ### Test Result Criteria
 #### Test Pass Criteria
 These 2 NTP servers are present in the output of "show ntp associations"
@@ -172,7 +210,7 @@ This server is present in the output of "show ntp associations" & shows specifie
 
 ## Test addition of NTP server (with valid "key-id" option)
 ### Objective
-Verify addition of NTP server with the server IP/FQDN and the "key-id" option succeeds
+Verify addition of NTP server with the server IP/FQDN and "key-id" option succeeds for a previously configured authentication key
 ### Requirements
  - Virtual Mininet Test Setup
 ### Setup

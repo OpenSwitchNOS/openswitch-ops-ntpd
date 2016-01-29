@@ -17,7 +17,7 @@
 
 import pytest
 import re
-from  opstestfw import *
+from opstestfw import *
 from opstestfw.switch.CLI import *
 from opstestfw.switch import *
 from opsvsi.docker import *
@@ -26,12 +26,7 @@ from opsvsi.opsvsitest import *
 # The purpose of this test is to test that ntp config
 # works as per the design and we receive the output as provided
 
-SERVER1 = "1.1.1.1"
-SERVER2 = "2.2.2.2"
-SERVER3 = "3.3.3.3"
-SERVER4 = "4.4.4.4"
-keyid = '12'
-VER = '3'
+DEFAULT_NTP_VERSION = '3'
 
 class myTopo(Topo):
     def build(self, hsts=0, sws=1, **_opts):
@@ -63,56 +58,8 @@ class ntpConfigTest(OpsVsiTest):
             s1.cmdCLI("ntp server %s version 3" % SERVER4)
             s1.cmdCLI("exit")
 
-        def testNtpAssociationsConfig(self):
-            info('\n### Verify ntp associations table ###\n')
-            s1 = self.net.switches[0]
-            #parse the ntp associations command
-            dump = s1.cmdCLI("show ntp associations")
-            lines = dump.split('\n')
-            count = 0
-            for line in lines:
-               if SERVER1 in line:
-                  info("###found %s in db###\n"% SERVER1)
-                  count = count + 1
-
-               if SERVER2 in line:
-                  info('###found %s in db###\n'% SERVER2)
-                  count = count + 1
-
-               if SERVER3 in line:
-                  info('###found %s in db###\n'% SERVER3)
-                  count = count + 1
-
-               if (SERVER4 in line and VER in line):
-                  info('###found %s and appropriate version in db###\n'% SERVER4)
-                  count = count + 1
-
-            assert count == 4, \
-                   info('tests are not successful\n')
-
-            info('\n### testNtpAssociationsConfig: Test Passed ###\n')
-
-        def testUnconfigureNtpServers(self):
-            info('\n### checking unconfigure commands ###\n')
-            s1 = self.net.switches[0]
-            s1.cmdCLI("configure terminal")
-            s1.cmdCLI("no ntp server %s" % SERVER1)
-            s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp associations")
-            count = 0
-            lines = dump.split('\n')
-            for line in lines:
-               if SERVER1 in line:
-                  info('\n### no ntp server tests unsuccessful \n')
-                  conut = count + 1
-
-            assert count == 0, \
-                  info('\n### no ntp server tests unsuccessful : Test failed### \n')
-
-            info('\n### no ntp server tests unsuccessful : Test passed### \n')
-
-        def testNtpAuthConfig(self):
-            info('\n### Authentication config test###\n')
+        def testNtpAuthEnableDisableConfig(self):
+            info('\n### === Authentication enable disable test START === ###')
             s1 = self.net.switches[0]
             s1.cmdCLI("configure terminal")
             s1.cmdCLI("ntp authentication enable")
@@ -122,7 +69,15 @@ class ntpConfigTest(OpsVsiTest):
             count = 0
             for line in lines:
                if "NTP Authentication has been enabled" in line:
-                  info('\n### enable authentication test successful\n')
+                  info('\n### Auth has been enabled as per show CLI - PASSED ###')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if "ntp authentication enable" in line:
+                  info('\n### Auth has been enabled as per running-config - PASSED ###')
                   count = count + 1
 
             s1.cmdCLI("configure terminal")
@@ -132,85 +87,410 @@ class ntpConfigTest(OpsVsiTest):
             lines = dump.split('\n')
             for line in lines:
                if "NTP Authentication has been disabled" in line:
-                  info("\n### disable authentication test successful \n")
+                  info('\n### Auth has been disabled as per show CLI - PASSED ###')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            sleep(2)
+            count = count + 1
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if "ntp authentication enable" in line:
+                  info('\n### Auth has been enabled as per running-config - FAILED ###')
+                  count = count - 1
+
+            assert count == 4, \
+                   info('\n### Authentication enable disable test FAILED ###')
+
+            info('\n### Authentication enable disable test PASSED ###')
+            info('\n### === Authentication enable disable test END === ###\n')
+
+        def testNtpValidAuthKeyAdd(self):
+            info('\n### === Valid Auth-Key addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp authentication-key 10 md5 password10")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp authentication-keys")
+            lines = dump.split('\n')
+            count = 0
+            for line in lines:
+               if ("10" in line and "password10" in line):
+                  info('\n### Valid auth-key present as per show CLI - PASSED ###')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if "ntp authentication-key 10 md5 password10" in line:
+                  info('\n### Valid auth-key present in running-config - PASSED')
                   count = count + 1
 
             assert count == 2, \
-                   info('\n### Authentication config: Tests failed!!###\n')
+                   info('\n### Valid auth-key addition test FAILED ###')
 
-        def testNtpAuthTrustKeys(self):
-            info('\n### Authentication config test###\n')
+            info('\n### Valid auth-key addition test PASSED ###')
+            info('\n### === Valid Auth-Key addition test END === ###\n')
+
+        def testNtpValidAuthKeyDelete(self):
+            info('\n### === Auth-Key deletion test START === ###')
             s1 = self.net.switches[0]
             s1.cmdCLI("configure terminal")
-            s1.cmdCLI("ntp authentication-key %s md5 mypassword" % keyid)
-            s1.cmdCLI("ntp trusted-key %s" % keyid)
+            s1.cmdCLI("no ntp authentication-key 10")
             s1.cmdCLI("exit")
             dump = s1.cmdCLI("show ntp authentication-keys")
             lines = dump.split('\n')
-            count = 0
+            count = 1
             for line in lines:
-                if keyid in line:
-                   info("\n#### authentication key added successfully ###\n")
-                   count = count + 1
+               if ("10" in line and "password10" in line):
+                  info('\n### Deleted key still present as per show CLI')
+                  count = count - 1
 
-            dump = s1.cmdCLI("show ntp trusted-keys")
+            ''' Now check the running config '''
+            count = count + 1
+            dump = s1.cmdCLI("show running-config")
             lines = dump.split('\n')
             for line in lines:
-                if keyid in line:
-                   info("\n####Trusted  key added successfully ###\n")
-                   count = count + 1
-
-            s1.cmdCLI("configure terminal")
-            s1.cmdCLI("no ntp authentication-key %s md5 mypassword" % keyid)
-            s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp authentication-keys")
-            lines = dump.split('\n')
-            for line in lines:
-                if keyid in line:
-                   info("\n#### authentication key removed unsuccessful ###\n")
-                   count = count - 1
-
+               if "ntp authentication-key 10 md5 password10" in line:
+                  info('\n### auth-key found in running-config inspite of deleting it')
+                  count = count - 1
 
             assert count == 2, \
-                   info('\n### Auth and trusted key : Tests failed!!! ###\n')
+                   info('\n### Valid auth-key deletion test FAILED ###')
 
-            info('\n### Auth and trusted key : Tests passed!!! ###\n')
+            info('\n### Valid auth-key deletion test PASSED ###')
+            info('\n### === Auth-Key deletion test END === ###\n')
 
-        def testNtpTrustedKeyConf(self):
-            info('\n### Authentication config test###\n')
+        def testNtpInvalidAuthKeyAdd(self):
+            info('\n### === Invalid Auth-Key addition test START === ###')
             s1 = self.net.switches[0]
             s1.cmdCLI("configure terminal")
-            s1.cmdCLI("ntp authentication-key %s md5 mypassword" % keyid)
-            s1.cmdCLI("ntp trusted-key %s" % keyid)
+            s1.cmdCLI("ntp authentication-key 0 md5 password0")
             s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp trusted-keys")
+            dump = s1.cmdCLI("show ntp authentication-keys")
+            lines = dump.split('\n')
             count = 0
+            count = count + 1
+            for line in lines:
+               if ("0" in line and "password0" in line):
+                  info('\n### Invalid auth-key present as per show CLI - FAILED ###')
+                  count = count - 1
+
+            ''' Now check the running config '''
+            count = count + 1
+            dump = s1.cmdCLI("show running-config")
             lines = dump.split('\n')
             for line in lines:
-                if keyid in line:
-                   info("\n####Trusted  key added successfully : Test passed!!!###\n")
-                   count = count + 1
+               if "ntp authentication-key 0 md5 password0" in line:
+                  info('\n### Invalid auth-key present in running-config - FAILED')
+                  count = count - 1
 
-            assert count == 1,\
-                   info("\n### Trusted key addition test failed!!!###\n")
+            assert count == 2, \
+                   info('\n### Invalid auth-key addition test FAILED ###')
 
+            info('\n### Invalid auth-key addition test PASSED ###')
+            info('\n### === Invalid Auth-Key addition test END === ###\n')
+
+        def testNtpShortPwdAdd(self):
+            info('\n### === Invalid (short) Auth-Key password addition test START === ###')
+            s1 = self.net.switches[0]
             s1.cmdCLI("configure terminal")
-            s1.cmdCLI("no ntp trusted-key %s" % keyid)
+            s1.cmdCLI("ntp authentication-key 2 md5 short")
             s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp trusted-keys")
+            dump = s1.cmdCLI("show ntp authentication-keys")
+            lines = dump.split('\n')
+            count = 0
+            count = count + 1
+            for line in lines:
+               if ("2" in line and "short" in line):
+                  info('\n### Invalid (short) auth-key password present as per show CLI - FAILED ###')
+                  count = count - 1
+
+            ''' Now check the running config '''
+            count = count + 1
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if "ntp authentication-key 2 md5 short" in line:
+                  info('\n### Invalid (short) auth-key password present in running-config - FAILED')
+                  count = count - 1
+
+            assert count == 2, \
+                   info('\n### Invalid (short) auth-key password addition test FAILED ###')
+
+            info('\n### Invalid (short) auth-key password addition test PASSED ###')
+            info('\n### === Invalid (short) Auth-Key password addition test END === ###\n')
+
+        def testNtpTooLongPwdAdd(self):
+            info('\n### === Invalid (too-long) Auth-Key password addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp authentication-key 17 md5 longerthansixteen")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp authentication-keys")
+            lines = dump.split('\n')
+            count = 0
+            count = count + 1
+            for line in lines:
+               if ("17" in line and "longerthansixteen" in line):
+                  info('\n### Invalid (too-long) auth-key password present as per show CLI - FAILED ###')
+                  count = count - 1
+
+            ''' Now check the running config '''
+            count = count + 1
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if "ntp authentication-key 17 md5 longerthansixteen" in line:
+                  info('\n### Invalid (too-long) auth-key password present in running-config - FAILED')
+                  count = count - 1
+
+            assert count == 2, \
+                   info('\n### Invalid (too-long) auth-key password addition test FAILED ###')
+
+            info('\n### Invalid (too-long) auth-key password addition test PASSED ###')
+            info('\n### === Invalid (too-long) Auth-Key password addition test END === ###\n')
+
+        def testNtpAddServerNoOptions(self):
+            info('\n### === Server (with no options) addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp server 1.1.1.1")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
             lines = dump.split('\n')
             count = 0
             for line in lines:
-                if keyid in line:
-                   info("\n####Trusted  key remove test failed ###\n")
-                   count = count + 1
+               if ("1.1.1.1" in line and DEFAULT_NTP_VERSION in line):
+                  info('\n### Server (with no options) present as per show CLI - PASSED ###')
+                  count = count + 1
 
-            assert count == 0, \
-                   info("\n### Trusted key removed successfully: Test passed###\n")
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server 1.1.1.1" in line and DEFAULT_NTP_VERSION not in line):
+                  info('\n### Server (with no options) present in running config - PASSED ###')
+                  count = count + 1
+
+            assert count == 2, \
+                   info('\n### Server (with no options) addition test FAILED ###')
+
+            info('\n### Server (with no options) addition test PASSED ###')
+            info('\n### === Server (with no options) addition test END === ###\n')
+
+        def testNtpAddServerPreferOption(self):
+            info('\n### === Server (with prefer option) addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp server 2.2.2.2 prefer")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            count = 0
+            for line in lines:
+               if ("2.2.2.2" in line and DEFAULT_NTP_VERSION in line):
+                  info('\n### Server (with no options) present as per show CLI - PASSED ###')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server 2.2.2.2 prefer" in line and DEFAULT_NTP_VERSION not in line):
+                  info('\n### Server (with prefer options) present in running config - PASSED ###')
+                  count = count + 1
+
+            assert count == 2, \
+                   info('\n### Server (with prefer options) addition test FAILED ###')
+
+            info('\n### Server (with prefer options) addition test PASSED ###')
+            info('\n### === Server (with prefer option) addition test END === ###\n')
+
+        def testNtpAddServerValidVersionOption(self):
+            info('\n### === Server (with version option) addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp server 3.3.3.3 version 4")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            count = 0
+            for line in lines:
+               if ("3.3.3.3" in line and "4" in line):
+                  info('\n### Server (with version option) present as per show CLI - PASSED ###')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server 3.3.3.3 version 4" in line):
+                  info('\n### Server (with version option) present in running config - PASSED ###')
+                  count = count + 1
+
+            assert count == 2, \
+                   info('\n### Server (with version option) addition test FAILED ###')
+
+            info('\n### Server (with version option) addition test PASSED ###')
+            info('\n### === Server (with version option) addition test END === ###\n')
+
+        def testNtpAddServerInvalidVersionOption(self):
+            info('\n### === Server (with version option) addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp server 4.4.4.4 version 5")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            count = 0
+            count = count + 1
+            for line in lines:
+               if ("4.4.4.4" in line and "5" in line):
+                  info('\n### Server (with invalid version option) present as per show CLI - FAILED ###')
+                  count = count - 1
+
+            ''' Now check the running config '''
+            count = count + 1
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server 4.4.4.4 version 5" in line):
+                  info('\n### Server (with invalid version option) present in running config - FAILED ###')
+                  count = count - 1
+
+            assert count == 2, \
+                   info('\n### Server (with invalid version option) addition test FAILED ###')
+
+            info('\n### Server (with invalid version option) addition test PASSED ###')
+            info('\n### === Server (with invalid version option) addition test END === ###\n')
+
+        def testNtpAddServerKeyidOption(self):
+            info('\n### === Server (with key-id option) addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp authentication-key 10 md5 password10")
+            s1.cmdCLI("ntp server 4.4.4.4 key-id 10")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            count = 0
+            for line in lines:
+               if ("4.4.4.4" in line and "10" in line):
+                  info('\n### Server (with key-id option) present as per show CLI - PASSED ###')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server 4.4.4.4 key-id 10" in line):
+                  info('\n### Server (with key-id option) present in running config - PASSED ###')
+                  count = count + 1
+
+            assert count == 2, \
+                   info('\n### Server (with key-id option) addition test FAILED ###')
+
+            info('\n### Server (with key-id option) addition test PASSED ###')
+            info('\n### === Server (with key-id option) addition test END === ###\n')
+
+        def testNtpAddServerAllOptions(self):
+            info('\n### === Server (with all options) addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp authentication-key 11 md5 password11")
+            s1.cmdCLI("ntp server 5.5.5.5 key-id 11 version 4 prefer")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            count = 0
+            for line in lines:
+               if ("5.5.5.5" in line and "11" in line and "4" in line):
+                  info('\n### Server (with all options) present as per show CLI - PASSED ###')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server 5.5.5.5 key-id 11 version 4 prefer" in line):
+                  info('\n### Server (with all options) present in running config - PASSED ###')
+                  count = count + 1
+
+            assert count == 2, \
+                   info('\n### Server (with all options) addition test FAILED ###')
+
+            info('\n### Server (with all options) addition test PASSED ###')
+            info('\n### === Server (with all options) addition test END === ###\n')
+
+        def testNtpAddMoreThan8Servers(self):
+            info('\n### === Addition of more than 8 servers test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp server 6.6.6.6")
+            s1.cmdCLI("ntp server 7.7.7.7")
+            s1.cmdCLI("ntp server 8.8.8.8")
+            s1.cmdCLI("ntp server 9.9.9.9")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            count = 0
+            for line in lines:
+               if ("6.6.6.6" in line or "7.7.7.7" in line or "8.8.8.8" in line):
+                  count = count + 1
+               if ("9.9.9.9" in line):
+                  count = count - 1
+
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server 6.6.6.6" in line or "ntp server 7.7.7.7" in line or "ntp server 8.8.8.8" in line):
+                  count = count + 1
+               if ("ntp server 9.9.9.9" in line):
+                  count = count - 1
+
+            assert count == 6, \
+                   info('\n### === Addition of more than 8 servers test FAILED === ###')
+
+            info('\n### === Addition of more than 8 servers test PASSED === ###')
+            info('\n### === Addition of more than 8 servers test END === ###')
+
+        def testNtpDelServer(self):
+            info('\n### === Server deletion test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("no ntp server 8.8.8.8")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            count = 0
+            count = count + 1
+            for line in lines:
+               if ("8.8.8.8" in line):
+                  info('\n### Server still present as per show CLI - FAILED ###')
+                  count = count - 1
+
+            ''' Now check the running config '''
+            count = count + 1
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server 8.8.8.8" in line):
+                  info('\n### Server still present in running config - FAILED ###')
+                  count = count - 1
+
+            assert count == 2, \
+                   info('\n### Server deletion test FAILED ###')
+
+            info('\n### Server deletion test PASSED ###')
+            info('\n### === Server deletion test END === ###\n')
 
 class TestNtpConfig:
 
-        def setup(self):
+	def setup(self):
             pass
 
         def teardown(self):
@@ -220,19 +500,47 @@ class TestNtpConfig:
             TestNtpConfig.ntpConfigTest = ntpConfigTest()
 
         def teardown_class(cls):
-            # Stop the Docker containers, and
-            # mininet topology
+            # Stop the Docker containers, and mininet topology
             TestNtpConfig.ntpConfigTest.net.stop()
 
         def __del__(self):
             del self.ntpConfigTest
 
-        def testNtpFull(self):
-            info('\n########## Test NTP configuration ##########\n')
-            self.ntpConfigTest.ntpConfig()
-            self.ntpConfigTest.testNtpAssociationsConfig()
-            self.ntpConfigTest.testUnconfigureNtpServers()
-            self.ntpConfigTest.testNtpAuthConfig()
-            self.ntpConfigTest.testNtpAuthTrustKeys()
-            self.ntpConfigTest.testNtpTrustedKeyConf()
-            info('\n########## End of test NTP configuration configuration ##########\n')
+        def testNtpAuthEnableDisable(self):
+            self.ntpConfigTest.testNtpAuthEnableDisableConfig()
+
+        def testNtpValidAuthKeyAdd(self):
+            self.ntpConfigTest.testNtpValidAuthKeyAdd()
+
+        def testNtpInvalidAuthKeyAdd(self):
+            self.ntpConfigTest.testNtpInvalidAuthKeyAdd()
+
+        def testNtpShortPwdAdd(self):
+            self.ntpConfigTest.testNtpShortPwdAdd()
+
+        def testNtpTooLongPwdAdd(self):
+            self.ntpConfigTest.testNtpTooLongPwdAdd()
+
+        def testNtpAddServerNoOptions(self):
+            self.ntpConfigTest.testNtpAddServerNoOptions()
+
+        def testNtpAddServerPreferOption(self):
+            self.ntpConfigTest.testNtpAddServerPreferOption()
+
+        def testNtpAddServerValidVersionOption(self):
+            self.ntpConfigTest.testNtpAddServerValidVersionOption()
+
+        def testNtpAddServerInvalidVersionOption(self):
+            self.ntpConfigTest.testNtpAddServerInvalidVersionOption()
+
+        def testNtpAddServerKeyidOption(self):
+            self.ntpConfigTest.testNtpAddServerKeyidOption()
+
+        def testNtpAddServerAllOptions(self):
+            self.ntpConfigTest.testNtpAddServerAllOptions()
+
+        def testNtpAddMoreThan8Servers(self):
+            self.ntpConfigTest.testNtpAddMoreThan8Servers()
+
+        def testNtpDelServer(self):
+            self.ntpConfigTest.testNtpDelServer()
