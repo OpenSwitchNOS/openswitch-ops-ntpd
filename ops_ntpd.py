@@ -364,7 +364,7 @@ def ops_ntpd_get_ntpd_associations_info(ntpd_updates):
         assoc_db[a_entry[NTPQ_ASSOCID]] = a_entry
 
     for assoc_id in assoc_db.keys():
-        err, cmd_output = ops_ntpd_run_command("ntpq -c \"rv %s\""%assoc_id)
+        err, cmd_output = ops_ntpd_run_command("ntpq -n -c \"rv %s\""%assoc_id)
         n_out = " ".join(cmd_output[0].split("\n"))
         n = n_out.split(",")
         associd = n[0].split()[0].strip().split("=")[1]
