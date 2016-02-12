@@ -12,6 +12,7 @@
 - [Test addition of NTP server (with valid "key-id" option)](#test-addition-of-ntp-server-with-valid-key-id-option)
 - [Test addition of NTP server (with invalid "key-id" option)](#test-addition-of-ntp-server-with-invalid-key-id-option)
 - [Test addition of NTP server (with all valid options)](#test-addition-of-ntp-server-with-all-valid-options)
+- [Test addition of more than 8 NTP servers](#test-addition-of-more-than-8-NTP-servers)
 
 ## Test initial conditions
 ### Objective
@@ -259,3 +260,22 @@ The Virtual Mininet Test Setup is required for this test.
 This server is present in the `show ntp associations` command output and displays the specified key-id and version.
 #### Test fail criteria
 This server is absent from the `show ntp associations` command output.
+
+## Test addition of more than 8 NTP servers
+### Objective
+Verify that the user can't add more than 8 NTP servers and an appropriate error message is shown when user tries to add more than 8 NTP servers.
+### Requirements
+The Virtual Mininet Test Setup is required for this test.
+### Setup
+#### Topology diagram
+```ditaa
+[s1]
+```
+### Description
+- Add more than 8 NTP servers
+
+### Test result criteria
+#### Test pass criteria
+An error message saying 'Maximum number of configurable NTP server limit has been reached' whenever user tries to add a 9th NTP server.
+#### Test Fail Criteria
+A 9th NTP server can be added or an error message different from 'Maximum number of configurable NTP server limit has been reached' is shown whenever user tries to add a 9th NTP server.
