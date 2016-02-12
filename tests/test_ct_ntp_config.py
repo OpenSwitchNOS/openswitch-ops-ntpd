@@ -415,15 +415,21 @@ class ntpConfigTest(OpsVsiTest):
             info('\n### === Server (with all options) addition test END === ###\n')
 
         def testNtpAddMoreThan8Servers(self):
-            info('\n### === Addition of more than 8 servers test START === ###')
+            moreThan8ServersError = "Maximum number of configurable NTP server limit has been reached";
+	    info('\n### === Addition of more than 8 servers test START === ###')
             s1 = self.net.switches[0]
             s1.cmdCLI("configure terminal")
             s1.cmdCLI("ntp server 6.6.6.6")
             s1.cmdCLI("ntp server 7.7.7.7")
             s1.cmdCLI("ntp server 8.8.8.8")
-            s1.cmdCLI("ntp server 9.9.9.9")
+
+            dump = s1.cmdCLI("ntp server 9.9.9.9")
+	    assert moreThan8ServersError in dump, \
+		error ('\n### More than 8 server addition test FAILED ###')
+
             s1.cmdCLI("exit")
-            dump = s1.cmdCLI("show ntp associations")
+
+	    dump = s1.cmdCLI("show ntp associations")
             lines = dump.split('\n')
             count = 0
             for line in lines:
