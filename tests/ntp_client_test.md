@@ -12,6 +12,7 @@
 - [Test addition of NTP server (with valid "key-id" option)](#test-addition-of-ntp-server-with-valid-key-id-option)
 - [Test addition of NTP server (with invalid "key-id" option)](#test-addition-of-ntp-server-with-invalid-key-id-option)
 - [Test addition of NTP server (with all valid options)](#test-addition-of-ntp-server-with-all-valid-options)
+- [Test addition of more than 8 NTP servers](#test-addition-of-more-than-8-NTP-servers)
 
 ## Test initial conditions
 ### Objective
@@ -23,9 +24,6 @@ The Virtual Mininet Test Setup is required for this test.
 ### Setup
 
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 This test confirms that NTP is enabled by default by displaying the `show ntp status` output.
 
@@ -42,9 +40,6 @@ Verify that NTP authentication can be disabled or enabled.
 The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 1. Disable NTP authentication and display the output of the 'show ntp status` to confirm that NTP authentication is disabled.
 2. Enable NTP authentication and display the output of `show ntp status` to confirm that NTP authentication is enabled.
@@ -63,9 +58,6 @@ Verify that the addition of an NTP authentication key succeeds with a valid rang
 The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 1. Add an NTP authentication key in the range of [1-65534].
 2. Add an md5 password containing between 8 to 16 alphanumeric characters.
@@ -84,9 +76,6 @@ Verify that the addition of NTP Authentication Key fails if it is outside the va
  The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 Add the NTP authentication key and ensure that it is outside of the [1-65534] range.
 
@@ -103,9 +92,6 @@ Verify that the addition of an NTP authentication key fails when the password is
 The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 Add an NTP authentication key with a password that has less than eight characters.
 
@@ -122,9 +108,6 @@ Verify that the addition of an NTP server succeeds with just the server IP or th
 The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 - Add NTP server using just the IPV4 address
 - Add NTP server using just the FQDN
@@ -142,9 +125,6 @@ Verify that the addition of an NTP server succeeds with the server IP/FQDN and t
 The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 Add an NTP server using an IPv4 address and the "prefer" option.
 
@@ -161,9 +141,6 @@ Verify that the addition of an NTP server succeeds with the server IP/FQDN and a
 The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 Add an NTP server using the IPV4 address and the version either as 3 or 4.
 ### Test result criteria
@@ -179,9 +156,6 @@ Verify that the addition of an NTP server fails when using an invalid "version".
 The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 Add an NTP server using the IPv4 address and a version of "5"
 
@@ -199,9 +173,6 @@ Verify that the addition of an NTP server succeeds using the server IP/FQDN and 
 The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 1. Add an authentication-key as the number 10.
 2. Add an NTP server using the IPv4 address and the key-id as 10.
@@ -219,9 +190,6 @@ Verify that the addition of an NTP server fails when using the server IP/FQDN an
  The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 
 ### Description
 1. Delete the authentication-key number 10 (if present).
@@ -244,9 +212,6 @@ Verify that the addition of an NTP server succeeds with the server IP/FQDN and a
 The Virtual Mininet Test Setup is required for this test.
 ### Setup
 #### Topology diagram
-```ditaa
-[s1]
-```
 ### Description
 1. Add an authentication-key as the number 10
 2. Add an NTP server using the IPv4 address with the following options and parameters:
@@ -259,3 +224,19 @@ The Virtual Mininet Test Setup is required for this test.
 This server is present in the `show ntp associations` command output and displays the specified key-id and version.
 #### Test fail criteria
 This server is absent from the `show ntp associations` command output.
+
+## Test addition of more than 8 NTP servers
+### Objective
+Verify that the user can't add more than 8 NTP servers and an appropriate error message is shown when user tries to add more than 8 NTP servers.
+### Requirements
+The Virtual Mininet Test Setup is required for this test.
+### Setup
+#### Topology diagram
+### Description
+- Add more than 8 NTP servers
+
+### Test result criteria
+#### Test pass criteria
+An error message saying 'Maximum number of configurable NTP server limit has been reached' whenever user tries to add a 9th NTP server.
+#### Test Fail Criteria
+A 9th NTP server can be added or an error message different from 'Maximum number of configurable NTP server limit has been reached' is shown whenever user tries to add a 9th NTP server.
