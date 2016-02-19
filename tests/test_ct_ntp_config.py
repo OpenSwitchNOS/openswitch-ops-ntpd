@@ -356,6 +356,69 @@ class ntpConfigTest(OpsVsiTest):
             info('\n### Server (with invalid version option) addition test PASSED ###')
             info('\n### === Server (with invalid version option) addition test END === ###\n')
 
+        def testNtpAddServerWithFQDN(self):
+            info('\n### === Server (with FQDN) addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp server abc.789.com")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            count = 0
+            for line in lines:
+               if ("abc.789.com" in line and DEFAULT_NTP_VERSION in line):
+                  info('\n### Server (with FQDN) present as per show CLI - PASSED ###')
+                  count = count + 1
+
+            ''' Now check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server abc.789.com" in line and DEFAULT_NTP_VERSION not in line):
+                  info('\n### Server (with FQDN) present in running config - PASSED ###')
+                  count = count + 1
+
+            assert count == 2, \
+                   error('\n### Server (with FQDN) addition test FAILED ###')
+
+            info('\n### Server (with FQDN) addition test PASSED ###')
+            info('\n### === Server (with FQDN) addition test END === ###\n')
+
+        def testNtpAddServerWithInvalidServerName(self):
+            info('\n### === Server (with invalid server name) addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+
+            ''' Ill-formatted IP addreses '''
+            s1.cmdCLI("ntp server 4.4")
+            s1.cmdCLI("ntp server 4.5.6.")
+            s1.cmdCLI("ntp server 5.5.275.5")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            count = 0
+            count = count + 1
+            for line in lines:
+               if ("4.4" in line or "4.5.6." in line or "5.5.275.5" in line):
+                  error('\n### Server (with ill-formatted ) present as per show CLI - FAILED ###')
+                  count = count - 1
+
+            ''' Now check the running config '''
+            count = count + 1
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server 4.4" in line or "ntp server 4.5.6." in line or "ntp server 5.5.275.5" in line):
+                  error('\n### Server (with ill-formatted) present in running config - FAILED ###')
+                  count = count - 1
+
+
+            assert count == 2, \
+                   error('\n### Server (with invalid server name) addition test FAILED ###')
+
+            info('\n### Server (with invalid server name) addition test PASSED ###')
+            info('\n### === Server (with invalid server name) addition test END === ###\n')
+
         def testNtpAddServerKeyidOption(self):
             info('\n### === Server (with key-id option) addition test START === ###')
             s1 = self.net.switches[0]
@@ -528,6 +591,9 @@ class TestNtpConfig:
         def testNtpAddServerInvalidVersionOption(self):
             self.ntpConfigTest.testNtpAddServerInvalidVersionOption()
 
+        def testNtpAddServerWithInvalidServerName(self):
+            self.ntpConfigTest.testNtpAddServerWithInvalidServerName()
+
         def testNtpAddServerKeyidOption(self):
             self.ntpConfigTest.testNtpAddServerKeyidOption()
 
@@ -539,3 +605,6 @@ class TestNtpConfig:
 
         def testNtpDelServer(self):
             self.ntpConfigTest.testNtpDelServer()
+
+        def testNtpAddServerWithFQDN(self):
+            self.ntpConfigTest.testNtpAddServerWithFQDN()
