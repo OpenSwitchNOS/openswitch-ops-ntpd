@@ -24,6 +24,8 @@
  */
 
 #include <sys/wait.h>
+#include <arpa/inet.h>
+#include <ctype.h>
 #include "vtysh/command.h"
 #include "memory.h"
 #include "vtysh/vtysh.h"
@@ -412,10 +414,50 @@ ntp_server_replace_parameters(const struct ovsrec_ntp_association *ntp_assoc_row
     return CMD_SUCCESS;
 }
 
+const bool
+has_all_digits(const char *pntp_server_name)
+{
+    while (*pntp_server_name) {
+           if (!ispunct(*pntp_server_name) && !isdigit(*pntp_server_name)) {
+               return false;
+           }
+           pntp_server_name++;
+    }
+    return true;
+}
+
+const bool
+is_valid_ipv4_address(const char *pntp_server_ipv4_address)
+{
+    struct sockaddr_in sa;
+    int result = inet_pton(AF_INET, pntp_server_ipv4_address, &(sa.sin_addr));
+    return result != 0;
+}
+
+const bool
+is_valid_server_name(const char *pntp_server_name)
+{
+    if(!pntp_server_name) {
+       return false;
+    }
+
+    if (has_all_digits(pntp_server_name)) {
+        return is_valid_ipv4_address(pntp_server_name);
+    }
+
+    return true;
+}
+
 const int
 ntp_server_sanitize_parameters(ntp_cli_ntp_server_params_t *pntp_server_params)
 {
     int retval = CMD_SUCCESS;
+
+    /* Check the validity of server name */
+    if (!is_valid_server_name(pntp_server_params->server_name)) {
+        vty_out(vty, "Invalid IP address%s", VTY_NEWLINE);
+        return CMD_ERR_NOTHING_TODO;
+    }
 
     /* Check for more than 8 NTP servers */
     if (!pntp_server_params->no_form) {

@@ -1,4 +1,4 @@
-# NTP-Client Test Cases
+:q# NTP-Client Test Cases
 
 - [Test initial conditions](#test-initial-conditions)
 - [Test NTP authentication disable/enable](#test-ntp-authentication-disableenable)
@@ -9,10 +9,12 @@
 - [Test addition of NTP server (with "prefer" option)](#test-addition-of-ntp-server-with-prefer-option)
 - [Test addition of NTP server (with "version" option)](#test-addition-of-ntp-server-with-version-option)
 - [Test addition failure of NTP server (with invalid "version" option)](#test-addition-failure-of-ntp-server-with-invalid-version-option)
+- [Test addition failure of server with invalid server name](#test-addition-failure-of-server-with-invalid-server-name)
 - [Test addition of NTP server (with valid "key-id" option)](#test-addition-of-ntp-server-with-valid-key-id-option)
 - [Test addition of NTP server (with invalid "key-id" option)](#test-addition-of-ntp-server-with-invalid-key-id-option)
 - [Test addition of NTP server (with all valid options)](#test-addition-of-ntp-server-with-all-valid-options)
 - [Test addition of more than 8 NTP servers](#test-addition-of-more-than-8-NTP-servers)
+- [Test addition of server with valid FQDN](#test-addition-of-server-with-valid-FQDN)
 
 ## Test initial conditions
 ### Objective
@@ -174,6 +176,23 @@ This server is absent from the `show ntp associations` command output.
 #### Test Fail Criteria
 This server is present in the `show ntp associations` command output and displays a specified version.
 
+## Test addition failure of NTP server with invalid server name
+### Objective
+Verify that the addition of an NTP server fails when using an invalid server name. 
+### Requirements
+The Virtual Mininet Test Setup is required for this test.
+### Setup
+#### Topology diagram
+[s1]
+### Description
+Add an NTP server using an ill-formatted IPv4 address.
+
+### Test result criteria
+#### Test pass criteria
+This server is absent from the `show ntp associations` command output.
+#### Test Fail Criteria
+This server is present in the `show ntp associations` command output.
+
 ## Test addition of NTP server (with valid "key-id" option)
 
 ### Objective
@@ -253,3 +272,20 @@ The Virtual Mininet Test Setup is required for this test.
 An error message saying 'Maximum number of configurable NTP server limit has been reached' whenever user tries to add a 9th NTP server.
 #### Test Fail Criteria
 A 9th NTP server can be added or an error message different from 'Maximum number of configurable NTP server limit has been reached' is shown whenever user tries to add a 9th NTP server.
+
+## Test addition of server with valid FQDN
+### Objective
+Verify that the addition of an NTP server succeeds with the server FQDN. 
+### Requirements
+The Virtual Mininet Test Setup is required for this test.
+### Setup
+#### Topology diagram
+[s1]
+### Description
+- Add an NTP server with a FQDN 
+
+### Test result criteria
+#### Test pass criteria
+This server is present in the `show ntp associations` command output and displays the specified FQDN.
+#### Test Fail Criteria
+This server is absent from the `show ntp associations` command output.
