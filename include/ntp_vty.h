@@ -114,6 +114,9 @@ config_finish_result (enum ovsdb_idl_txn_status status)
 #define NTP_DEFAULT_INT                                 0
 #define NTP_DEFAULT_ZERO_STR                            "0"
 
+/* NTP maximum server limit */
+#define NTP_ASSOC_MAX_SERVERS                           8
+
 /* NTP Help strings */
 #define NTP_STR                    "NTP Client configuration\n"
 #define NTP_SERVER_STR             "NTP Association configuration\n"

@@ -417,6 +417,22 @@ ntp_server_sanitize_parameters(ntp_cli_ntp_server_params_t *pntp_server_params)
 {
     int retval = CMD_SUCCESS;
 
+    /* Check for more than 8 NTP servers */
+    if (!pntp_server_params->no_form) {
+        int counter = 0;
+        const struct ovsrec_ntp_association *ntp_assoc_row = NULL;
+        OVSREC_NTP_ASSOCIATION_FOR_EACH(ntp_assoc_row, idl) {
+            counter++;
+        }
+
+        if (counter >= NTP_ASSOC_MAX_SERVERS) {
+            vty_out (vty, "Maximum number of configurable"
+                          " NTP server limit has been reached%s",
+                     VTY_NEWLINE);
+            return CMD_ERR_NOTHING_TODO;
+        }
+    }
+
     /* Check sanity for the key */
     if (pntp_server_params->keyid) {
         retval = ntp_sanitize_auth_key(pntp_server_params->keyid, (const struct ovsrec_ntp_key **)(&(pntp_server_params->key_row)), NULL);
