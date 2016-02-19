@@ -18,7 +18,7 @@
 
 ## Test initial conditions
 ### Objective
-Verify that NTP has been enabled.
+Verify that NTP is enabled.
 
 ### Requirements
 The Virtual Mininet Test Setup is required for this test.
