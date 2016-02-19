@@ -675,10 +675,10 @@ vtysh_ovsdb_show_ntp_status()
          return;
     }
 
-    vty_out(vty, "NTP has been enabled\n");
+    vty_out(vty, "NTP is enabled\n");
 
     status = smap_get_bool(&ovs_system->ntp_config, SYSTEM_NTP_CONFIG_AUTHENTICATION_ENABLE, false);
-    vty_out(vty, "NTP Authentication has been %s\n", ((status) ? SYSTEM_NTP_CONFIG_AUTHENTICATION_ENABLED : SYSTEM_NTP_CONFIG_AUTHENTICATION_DISABLED));
+    vty_out(vty, "NTP authentication is %s\n", ((status) ? SYSTEM_NTP_CONFIG_AUTHENTICATION_ENABLED : SYSTEM_NTP_CONFIG_AUTHENTICATION_DISABLED));
 
     buf = smap_get(&ovs_system->ntp_status, SYSTEM_NTP_STATUS_UPTIME);
     vty_out(vty, "Uptime: %s second(s)\n", ((buf) ? buf : NTP_DEFAULT_STR));

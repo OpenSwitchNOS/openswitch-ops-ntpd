@@ -58,7 +58,7 @@ class ntpConfigTest(OpsVsiTest):
             lines = dump.split('\n')
             count = 0
             for line in lines:
-               if "NTP Authentication has been enabled" in line:
+               if "NTP authentication is enabled" in line:
                   info('\n### Auth has been enabled as per show CLI - PASSED ###')
                   count = count + 1
 
@@ -76,7 +76,7 @@ class ntpConfigTest(OpsVsiTest):
             dump = s1.cmdCLI("show ntp status")
             lines = dump.split('\n')
             for line in lines:
-               if "NTP Authentication has been disabled" in line:
+               if "NTP authentication is disabled" in line:
                   info('\n### Auth has been disabled as per show CLI - PASSED ###')
                   count = count + 1
 
