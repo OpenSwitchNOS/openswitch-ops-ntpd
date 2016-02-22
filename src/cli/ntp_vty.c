@@ -24,6 +24,8 @@
  */
 
 #include <sys/wait.h>
+#include <arpa/inet.h>
+#include <ctype.h>
 #include "vtysh/command.h"
 #include "memory.h"
 #include "vtysh/vtysh.h"
@@ -412,10 +414,50 @@ ntp_server_replace_parameters(const struct ovsrec_ntp_association *ntp_assoc_row
     return CMD_SUCCESS;
 }
 
+static const bool
+has_all_digits(const char *pntp_server_name)
+{
+    while (*pntp_server_name) {
+           if (!ispunct(*pntp_server_name) && !isdigit(*pntp_server_name)) {
+               return false;
+           }
+           pntp_server_name++;
+    }
+    return true;
+}
+
+const bool
+is_valid_ipv4_address(const char *pntp_server_ipv4_address)
+{
+    struct sockaddr_in sa;
+    int result = inet_pton(AF_INET, pntp_server_ipv4_address, &(sa.sin_addr));
+    return result > 0;
+}
+
+const bool
+is_valid_server_name(const char *pntp_server_name)
+{
+    if(!pntp_server_name) {
+       return false;
+    }
+
+    if (has_all_digits(pntp_server_name)) {
+        return is_valid_ipv4_address(pntp_server_name);
+    }
+
+    return true;
+}
+
 const int
 ntp_server_sanitize_parameters(ntp_cli_ntp_server_params_t *pntp_server_params)
 {
     int retval = CMD_SUCCESS;
+
+    /* Check the validity of server name */
+    if (!is_valid_server_name(pntp_server_params->server_name)) {
+        vty_out(vty, "Invalid IP address%s", VTY_NEWLINE);
+        return CMD_ERR_NOTHING_TODO;
+    }
 
     /* Check for more than 8 NTP servers */
     if (!pntp_server_params->no_form) {
@@ -633,10 +675,10 @@ vtysh_ovsdb_show_ntp_status()
          return;
     }
 
-    vty_out(vty, "NTP has been enabled\n");
+    vty_out(vty, "NTP is enabled\n");
 
     status = smap_get_bool(&ovs_system->ntp_config, SYSTEM_NTP_CONFIG_AUTHENTICATION_ENABLE, false);
-    vty_out(vty, "NTP Authentication has been %s\n", ((status) ? SYSTEM_NTP_CONFIG_AUTHENTICATION_ENABLED : SYSTEM_NTP_CONFIG_AUTHENTICATION_DISABLED));
+    vty_out(vty, "NTP authentication is %s\n", ((status) ? SYSTEM_NTP_CONFIG_AUTHENTICATION_ENABLED : SYSTEM_NTP_CONFIG_AUTHENTICATION_DISABLED));
 
     buf = smap_get(&ovs_system->ntp_status, SYSTEM_NTP_STATUS_UPTIME);
     vty_out(vty, "Uptime: %s second(s)\n", ((buf) ? buf : NTP_DEFAULT_STR));
