@@ -39,6 +39,7 @@
 #include "ovsdb-data.h"
 #include "vtysh/vtysh_ovsdb_config.h"
 #include "vtysh/vtysh_ovsdb_if.h"
+#include "vtysh_ovsdb_ntp_context.h"
 
 VLOG_DEFINE_THIS_MODULE(vtysh_ntp_cli);
 
@@ -1059,6 +1060,8 @@ void cli_pre_init(void)
  */
 void cli_post_init(void)
 {
+    vtysh_ret_val retval = e_vtysh_error;
+
     /* SHOW CMDS */
     install_element (VIEW_NODE, &vtysh_show_ntp_associations_cmd);
     install_element (ENABLE_NODE, &vtysh_show_ntp_associations_cmd);
@@ -1087,6 +1090,19 @@ void cli_post_init(void)
 
     install_element (CONFIG_NODE, &vtysh_set_ntp_trusted_key_cmd);
     install_element (CONFIG_NODE, &no_vtysh_set_ntp_trusted_key_cmd);
+
+    /* Installing running config sub-context with global config context */
+    retval = e_vtysh_error;
+    retval = install_show_run_config_subcontext(e_vtysh_config_context,
+                                     e_vtysh_config_context_ntp,
+                                     &vtysh_config_context_ntp_clientcallback,
+                                     NULL, NULL);
+    if(e_vtysh_ok != retval)
+    {
+        vtysh_ovsdb_config_logmsg(VTYSH_OVSDB_CONFIG_ERR,
+                           "config context unable to add ntp client callback");
+        assert(0);
+    }
 }
 
 /*================================================================================================*/
