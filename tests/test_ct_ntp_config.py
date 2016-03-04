@@ -603,6 +603,9 @@ class TestNtpConfig:
         def testNtpAddServerInvalidVersionOption(self):
             self.ntpConfigTest.testNtpAddServerInvalidVersionOption()
 
+        def testNtpAddServerWithLongServerName(self):
+            self.ntpConfigTest.testNtpAddServerWithLongServerName()
+
         def testNtpAddServerWithInvalidServerName(self):
             self.ntpConfigTest.testNtpAddServerWithInvalidServerName()
 
