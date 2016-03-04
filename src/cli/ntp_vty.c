@@ -570,6 +570,7 @@ vtysh_ovsdb_show_ntp_associations()
     const struct ovsrec_ntp_association *ntp_assoc_row = NULL;
     int i = 0;
     const char *buf = NULL;
+    char dest[16];
 
     vty_out(vty, "----------------------------------------------------------------------------------------------------------------------\n");
     vty_out(vty, " %3s  %15s  %15s  %3s  %5s",
@@ -608,7 +609,9 @@ vtysh_ovsdb_show_ntp_associations()
         //vty_out(vty, "%5s", ((buf) ? buf : ""));
         vty_out(vty, "%3d", ++i);
 
-        vty_out(vty, "  %15s", ntp_assoc_row->address);
+        snprintf(dest, sizeof(dest), "%s", ntp_assoc_row->address);
+        vty_out(vty, "  %15s", dest);
+
 
         buf = smap_get(&ntp_assoc_row->association_status, NTP_ASSOC_STATUS_REMOTE_PEER_ADDRESS);
         vty_out(vty, "  %15s", ((buf) ? buf : ""));
