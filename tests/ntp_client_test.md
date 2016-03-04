@@ -15,6 +15,7 @@
 - [Test addition of NTP server (with all valid options)](#test-addition-of-ntp-server-with-all-valid-options)
 - [Test addition of more than 8 NTP servers](#test-addition-of-more-than-8-NTP-servers)
 - [Test addition of server with valid FQDN](#test-addition-of-server-with-valid-FQDN)
+- [Test addition of NTP server (with long server name)](#test-addition-of-ntp-server-with-long-server-name)
 
 ## Test initial conditions
 ### Objective
@@ -319,3 +320,23 @@ The Virtual Mininet Test Setup is required for this test.
 This server is present in the `show ntp associations` command output and displays the specified FQDN.
 #### Test Fail Criteria
 This server is absent from the `show ntp associations` command output.
+
+## Test addition of NTP server with long server name
+### Objective
+Verify that the display of "show ntp associations" is proper with the addition of an NTP server with a long name.
+### Requirements
+The Virtual Mininet Test Setup is required for this test.
+### Setup
+#### Topology diagram
+```ditaa
+[s1]
+```
+### Description
+Add an NTP server using a long server name.
+
+### Test result criteria
+#### Test pass criteria
+The server name line in `show ntp associations` output doesn't go out of the table.
+#### Test Fail Criteria
+The server name line in `show ntp associations` output goes out of the table.
+
