@@ -393,13 +393,23 @@ class ntpConfigTest(OpsVsiTest):
             s1.cmdCLI("ntp server 4.4")
             s1.cmdCLI("ntp server 4.5.6.")
             s1.cmdCLI("ntp server 5.5.275.5")
+
+            ''' Loopback, multicast,broadcast and experimental IP addresses '''
+            s1.cmdCLI("ntp server 127.25.25.25")
+            s1.cmdCLI("ntp server 230.25.25.25")
+            s1.cmdCLI("ntp server 250.25.25.25")
+
+            ''' IP addresses starting with 0 '''
+            s1.cmdCLI("ntp server 0.1.1.1")
+
             s1.cmdCLI("exit")
             dump = s1.cmdCLI("show ntp associations")
             lines = dump.split('\n')
             count = 0
             count = count + 1
             for line in lines:
-               if ("4.4" in line or "4.5.6." in line or "5.5.275.5" in line):
+               if ("4.4" in line or "4.5.6." in line or "5.5.275.5" in line or "127.25.25.25" in line
+                    or "230.25.25.25" in line or "250.25.25.25" in line or "0.1.1.1" in line):
                   error('\n### Server (with ill-formatted ) present as per show CLI - FAILED ###')
                   count = count - 1
 
@@ -408,7 +418,9 @@ class ntpConfigTest(OpsVsiTest):
             dump = s1.cmdCLI("show running-config")
             lines = dump.split('\n')
             for line in lines:
-               if ("ntp server 4.4" in line or "ntp server 4.5.6." in line or "ntp server 5.5.275.5" in line):
+               if ("ntp server 4.4" in line or "ntp server 4.5.6." in line or "ntp server 5.5.275.5" in line
+                    or "ntp server 127.25.25.25" in line or "ntp server 230.25.25.25" in line
+                    or "ntp server 250.25.25.25" in line or "0.1.1.1" in line):
                   error('\n### Server (with ill-formatted) present in running config - FAILED ###')
                   count = count - 1
 
@@ -546,6 +558,49 @@ class ntpConfigTest(OpsVsiTest):
             info('\n### Server deletion test PASSED ###')
             info('\n### === Server deletion test END === ###\n')
 
+        def testNtpAddServerWithLongServerName(self):
+            info('\n### === Server (with long server name) addition test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+
+            ''' Long server name '''
+            s1.cmdCLI("ntp server 1.cr.pool.ntp.org version 4 prefer")
+            s1.cmdCLI("ntp server abcdefghijklmnopqrstuvwxyz")
+            s1.cmdCLI("ntp server 192.168.101.125")
+
+            ''' Short server name '''
+            s1.cmdCLI("ntp server ab")
+
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            max_len = len(lines[1])
+            count = 0
+            for line in lines:
+                if (len(line) > max_len):
+                    count = count + 1
+                if (" 1.cr.pool.ntp.o " in line):
+                    count = count + 1
+                if (" abcdefghijklmn "  in line):
+                    count = count + 1
+                if (" 192.168.101.125 " in line):
+                    count = count + 1
+                if (" ab " in line):
+                    count = count + 1
+
+            ''' Clean up '''
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("no ntp server 1.cr.pool.ntp.org")
+            s1.cmdCLI("no ntp server abcdefghijklmnopqrstuvwxyz")
+            s1.cmdCLI("no ntp server 192.168.101.125")
+            s1.cmdCLI("no ntp server ab")
+            s1.cmdCLI("exit")
+
+            assert count == 3, \
+                   error('\n###  Server (with long server name) addition test FAILED ###')
+            info('\n### Server (with long server name) addition test PASSED ###')
+            info('\n### === Server (with long server name) addition test END === ###\n')
+
 class TestNtpConfig:
 
         def setup(self):
@@ -590,6 +645,9 @@ class TestNtpConfig:
 
         def testNtpAddServerInvalidVersionOption(self):
             self.ntpConfigTest.testNtpAddServerInvalidVersionOption()
+
+        def testNtpAddServerWithLongServerName(self):
+            self.ntpConfigTest.testNtpAddServerWithLongServerName()
 
         def testNtpAddServerWithInvalidServerName(self):
             self.ntpConfigTest.testNtpAddServerWithInvalidServerName()
