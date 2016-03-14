@@ -32,6 +32,7 @@ from ovs.db import error
 from ovs.db import types
 import ovs.db.idl
 import ovs.vlog
+import multiprocessing
 
 vlog = ovs.vlog.Vlog("ops_ntpd_sync_mgr")
 
@@ -77,7 +78,6 @@ class NTPTransactionMgr(object):
         self.address = None
         while not self.idl.run():
             sleep(.1)
-        self.txn = ovs.db.idl.Transaction(self.idl)
 
     def set_ntp_association_status(self, row, entry):
         setattr(row, 'association_status' , entry)
@@ -120,52 +120,42 @@ class NTPTransactionMgr(object):
         setattr(ovs_rec, 'ntp_statistics' , entry["statistics"])
         return ovs_rec
 
+    def update_info(self, ntp_info):
+        self.txn = ovs.db.idl.Transaction(self.idl)
+        print "update_info recieved"
+        vlog.info("update_info recieved")
+
+        #Update NTP associations table
+        self.update_row_in_ntp_association_table(ntp_info)
+        #Update NTP status with SYSTEM table
+        row = self.update_system_table(ntp_info)
+        status = self.txn.commit_block()
+        if status != ovs.db.idl.Transaction.SUCCESS:
+            vlog.err("ops_ntpd_sync_mgr update_row for ntp config in SYSTEM \
+                    table failed")
+
     def close(self):
-       status = self.txn.commit_block()
        self.idl.close()
        return status
 
-def ops_ntpd_sync_mgr_update(ntp_info):
+def ops_ntpd_sync_mgr_run(transaction_queue):
     ops_ntpd_sync_mgr = NTPTransactionMgr()
-
-    #Update NTP associations table
-    ops_ntpd_sync_mgr.update_row_in_ntp_association_table(ntp_info)
-    #Update NTP status with SYSTEM table
-    row = ops_ntpd_sync_mgr.update_system_table(ntp_info)
-
-    status = ops_ntpd_sync_mgr.close()
-    if status != ovs.db.idl.Transaction.SUCCESS:
-        vlog.err("ops_ntpd_sync_mgr update_row for ntp config in SYSTEM \
-                table failed")
-
-def ops_ntpd_sync_mgr_run():
-    ntp_association_entry = {"address": "*",
+    def_ntp_association_entry = {"address": "*",
                              "association_status": { "*" },
                              "status": { "*" },
                              "statistics": { "*" }
                              }
-    argv = sys.argv
-    num_args = len(argv)
-    parser = argparse.ArgumentParser()
-
-    '''
-    This script is invoked as follows:
-      - ops_ntpd_sync_mgr -c update -d <json>
-    '''
-    parser.add_argument('-c', '--command', type=str)
-    parser.add_argument('-d', '--table', type=json.loads)
-    args = parser.parse_args()
-    ntp_info = {}
-    ntp_info["associations_info"] = args.table['associations_info']
-    ntp_info["statistics"] = args.table['statistics']
-    ntp_info["status"] = args.table['status']
-    command = args.command
-    if command == "update":
-        ops_ntpd_sync_mgr_update(ntp_info)
-    else:
-        vlog.err("Invalid command %s to ops_ntpd_sync_mgr script.... Exiting"
-                 % (command))
-        sys.exit()
+    while(True):
+        str_obj = transaction_queue.get()
+        if str_obj == "shutdown":
+            break
+        ntp_info = {}
+        msg_info = json.loads(str_obj)
+        ntp_info["associations_info"] = msg_info['associations_info']
+        ntp_info["statistics"] = msg_info['statistics']
+        ntp_info["status"] = msg_info['status']
+        ops_ntpd_sync_mgr.update_info(ntp_info)
+    ops_ntpd_sync_mgr.close()
 
 if __name__ == '__main__':
     try:
