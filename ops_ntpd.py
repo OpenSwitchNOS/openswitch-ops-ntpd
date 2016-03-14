@@ -33,6 +33,8 @@ import ovs.daemon
 import ovs.db.idl
 import ovs.unixctl
 import ovs.unixctl.server
+from ops_ntpd_sync_to_ovsdb import ops_ntpd_sync_mgr_run
+import multiprocessing
 
 # OVSDB information
 idl = None
@@ -91,6 +93,8 @@ translate_peer_type = {
   "B" : "bcast_server",
   "M" : "mcast_server"
 }
+transaction_queue = None
+sync_mgr_process  = None
 
 # Defaults
 DEFAULT_NTP_KEY_ID        = 0
@@ -469,7 +473,8 @@ def ops_ntpd_sync_updates_to_ovsdb():
     str_ntpd_updates = json.dumps(ntpd_updates)
     vlog.dbg("Sync information is \n %s"%(\
         pprint.pformat(ntpd_updates, indent=5)))
-    os.system("ops_ntpd_sync_to_ovsdb -c update -d '%s'"%(str_ntpd_updates))
+
+    ops_ntpd_send_info_to_transaction_mgr(str_ntpd_updates)
     vlog.dbg("Sync NTPD -> OVSDB : done")
 
 def ops_ntpd_check_updates_with_ntp_associations(l_ntpa_map, trigger_reconfig):
@@ -648,6 +653,25 @@ def ops_ntpd_check_updates_from_ovsdb():
 
     ops_ntpd_sync_updates_to_ntpd(server_configs, key_configs, \
                                         keys_file_content)
+def ops_ntpd_init_transaction_mgr():
+    global transaction_queue, sync_mgr
+    transaction_queue = multiprocessing.Queue()
+    sync_mgr = multiprocessing.Process(target=ops_ntpd_sync_mgr_run, \
+                args=(transaction_queue,))
+    sync_mgr.start()
+
+def ops_ntpd_send_info_to_transaction_mgr(ntpd_update_str):
+    global transaction_queue, sync_mgr
+    transaction_queue.put(ntpd_update_str)
+
+def ops_ntpd_shutdown_transaction_mgr():
+    global transaction_queue, sync_mgr
+    transaction_queue.put("shutdown")
+    transaction_queue.close()
+    transaction_queue.join_thread()
+    sync_mgr.join()
+    transaction_queue = None
+    sync_mgr = None
 
 def ops_ntpd_connection_exit_handler(conn, unused_argv, unused_aux):
     global exiting
@@ -743,6 +767,7 @@ def ops_ntpd_provision_ntpd_daemon():
             # Kill zombie ntpd process and Start a new ntpd daemon
             ops_ntpd_cleanup_ntpd_processes()
             ops_ntpd_start_ntpd(ntpd_info)
+            ops_ntpd_init_transaction_mgr()
             # Get the ntp config
             time.sleep(5)
             ops_ntpd_check_updates_from_ovsdb()
@@ -819,6 +844,8 @@ def ops_ntpd_init():
     if ntpd_process is not None:
         vlog.dbg("ops-ntpd-debug - killing ntpd")
     idl.close()
+    ops_ntpd_cleanup_ntpd_processes()
+    ops_ntpd_shutdown_transaction_mgr()
 
 if __name__ == '__main__':
     try:
