@@ -15,6 +15,7 @@
 - [Test addition of NTP server (with invalid "key-id" option)](#test-addition-of-ntp-server-with-invalid-key-id-option)
 - [Test addition of NTP server (with all valid options)](#test-addition-of-ntp-server-with-all-valid-options)
 - [Test addition of more than 8 NTP servers](#test-addition-of-more-than-8-NTP-servers)
+- [Test modification of 8th NTP server](#test-modification-of-8th-ntp-server)
 - [Test addition of server with valid FQDN](#test-addition-of-server-with-valid-FQDN)
 - [Test addition of NTP server (with long server name)](#test-addition-of-ntp-server-with-long-server-name)
 
@@ -302,6 +303,27 @@ The Virtual Mininet Test Setup is required for this test.
 An error message saying 'Maximum number of configurable NTP server limit has been reached' whenever a user tries to add a ninth NTP server.
 #### Test Fail Criteria
 A ninth NTP server is added, or an error message different from 'Maximum number of configurable NTP server limit has been reached' is shown.
+
+## Test modification of 8th NTP server
+### Objective
+Verify that the user can modify a NTP server after maximum number of NTP servers are configured on the system.
+### Requirements
+The Virtual Mininet Test Setup is required for this test.
+### Setup
+#### Topology diagram
+```ditaa
+[s1]
+```
+### Description
+- Add eight NTP servers.
+- Modify the NTP association version configuration from 3 to 4 for the 8th NTP server.
+
+### Test result criteria
+#### Test pass criteria
+Modified NTP association version should be taken into account and verified with both "show ntp associations" and "show running-config"
+#### Test Fail Criteria
+If the NTP associations verion is not correctly reflected then the test would fail.
+
 
 ## Test addition of server with valid FQDN
 ### Objective
