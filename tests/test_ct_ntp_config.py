@@ -528,6 +528,38 @@ class ntpConfigTest(OpsVsiTest):
             info('\n### === Addition of more than 8 servers test PASSED === ###')
             info('\n### === Addition of more than 8 servers test END === ###')
 
+        def testNtpModify8thNtpServer(self):
+            info('\n### === Modifying version for the 8th NTP Association test START === ###')
+            s1 = self.net.switches[0]
+            s1.cmdCLI("configure terminal")
+            s1.cmdCLI("ntp server 8.8.8.8 version 4")
+            s1.cmdCLI("exit")
+            dump = s1.cmdCLI("show ntp associations")
+            lines = dump.split('\n')
+            count = 0
+            for line in lines:
+               if ("8.8.8.8" in line):
+                  server_version = line.split()[3]
+                  if server_version != "4":
+                     error('\n### Server configuration is not latest FAILED === ###')
+                     count = count - 1
+                  else:
+                     count = count + 1
+
+
+            ''' Check the running config '''
+            dump = s1.cmdCLI("show running-config")
+            lines = dump.split('\n')
+            for line in lines:
+               if ("ntp server 8.8.8.8 version 4" in line):
+                  count = count + 1
+
+            assert count == 2, \
+                   error('\n### === Modifying version for the 8th NTP Association test FAILED === ###')
+
+            info('\n### === Modifying version for the 8th NTP Association test PASSED === ###')
+            info('\n### === Modifying version for the 8th NTP Association test END === ###')
+
         def testNtpDelServer(self):
             info('\n### === Server deletion test START === ###')
             s1 = self.net.switches[0]
@@ -661,6 +693,9 @@ class TestNtpConfig:
 
         def testNtpAddMoreThan8Servers(self):
             self.ntpConfigTest.testNtpAddMoreThan8Servers()
+
+        def testNtpModify8thNtpServer(self):
+            self.ntpConfigTest.testNtpModify8thNtpServer()
 
         def testNtpDelServer(self):
             self.ntpConfigTest.testNtpDelServer()

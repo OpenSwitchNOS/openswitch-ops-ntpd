@@ -474,22 +474,6 @@ ntp_server_sanitize_parameters(ntp_cli_ntp_server_params_t *pntp_server_params)
         return CMD_ERR_NOTHING_TODO;
     }
 
-    /* Check for more than 8 NTP servers */
-    if (!pntp_server_params->no_form) {
-        int counter = 0;
-        const struct ovsrec_ntp_association *ntp_assoc_row = NULL;
-        OVSREC_NTP_ASSOCIATION_FOR_EACH(ntp_assoc_row, idl) {
-            counter++;
-        }
-
-        if (counter >= NTP_ASSOC_MAX_SERVERS) {
-            vty_out (vty, "Maximum number of configurable"
-                          " NTP server limit has been reached%s",
-                     VTY_NEWLINE);
-            return CMD_ERR_NOTHING_TODO;
-        }
-    }
-
     /* Check sanity for the key */
     if (pntp_server_params->keyid) {
         retval = ntp_sanitize_auth_key(pntp_server_params->keyid, (const struct ovsrec_ntp_key **)(&(pntp_server_params->key_row)), NULL);
@@ -504,6 +488,28 @@ ntp_server_sanitize_parameters(ntp_cli_ntp_server_params_t *pntp_server_params)
 
         if ((ntp_ver < atoi(NTP_ASSOC_ATTRIB_VERSION_3)) || (ntp_ver > atoi(NTP_ASSOC_ATTRIB_VERSION_4))) {
             vty_out(vty, "NTP version should lie between [%s-%s]\n", NTP_ASSOC_ATTRIB_VERSION_3, NTP_ASSOC_ATTRIB_VERSION_4);
+            return CMD_ERR_NOTHING_TODO;
+        }
+    }
+
+    return CMD_SUCCESS;
+}
+
+const int
+ntp_server_check_max_number_of_servers(ntp_cli_ntp_server_params_t *pntp_server_params)
+{
+    /* Check for more than 8 NTP servers */
+    if (!pntp_server_params->no_form) {
+        int counter = 0;
+        const struct ovsrec_ntp_association *ntp_assoc_row = NULL;
+        OVSREC_NTP_ASSOCIATION_FOR_EACH(ntp_assoc_row, idl) {
+            counter++;
+        }
+
+        if (counter >= NTP_ASSOC_MAX_SERVERS) {
+            vty_out (vty, "Maximum number of configurable"
+                          " NTP server limit has been reached%s",
+                     VTY_NEWLINE);
             return CMD_ERR_NOTHING_TODO;
         }
     }
@@ -534,6 +540,13 @@ vtysh_ovsdb_ntp_server_set(ntp_cli_ntp_server_params_t *ntp_server_params)
             /* Nothing to delete */
             vty_out(vty, "This server does not exist\n");
         } else {
+
+            retval = ntp_server_check_max_number_of_servers(ntp_server_params);
+            if (CMD_SUCCESS != retval) {
+                /* End of transaction. */
+                END_DB_TXN(ntp_association_txn);
+                return retval;
+            }
             VLOG_DBG("Inserting a row into the NTP Assoc table\n");
 
             ntp_assoc_row = ovsrec_ntp_association_insert(ntp_association_txn);
