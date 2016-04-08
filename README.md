@@ -20,11 +20,11 @@ What is the structure of the repository?
 
 What is the license?
 --------------------
-Apache 2.0 license. For more details refer to [COPYING](https://git.openswitch.net/cgit/openswitch/ops-openvswitch/tree/COPYING).
+Apache 2.0 license. For more details refer to [COPYING](https://git.openswitch.net/cgit/openswitch/ops-ntpd/tree/COPYING).
 
 What other documents are available?
 ----------------------------------
-For the high level design of `ops-ntpd`, refer to [DESIGN.md](DESIGN.md).
+For the high level design of `ops-ntpd`, refer to [DESIGN.md](https://git.openswitch.net/cgit/openswitch/ops-ntpd/tree/DESIGN.md).
 
 More Info
 ----------
