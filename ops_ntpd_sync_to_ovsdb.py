@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# (C) Copyright 2015 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2016 Hewlett Packard Enterprise Development LP
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -25,14 +25,13 @@ NOTES:
    push 'instrumented' ntp status to OVSDB.
 '''
 
-import argparse, os, json, sys
+import json
+import sys
 from time import sleep
 import ovs.dirs
 from ovs.db import error
-from ovs.db import types
 import ovs.db.idl
 import ovs.vlog
-import multiprocessing
 
 vlog = ovs.vlog.Vlog("ops_ntpd_sync_mgr")
 
@@ -47,17 +46,19 @@ ovs_schema = '/usr/share/openvswitch/vswitch.ovsschema'
 
 # Tables definitions
 NTP_ASSOCIATION_TABLE = 'NTP_Association'
-NTP_KEY_TABLE         = 'NTP_Key'
-SYSTEM_TABLE          = 'System'
+NTP_KEY_TABLE = 'NTP_Key'
+SYSTEM_TABLE = 'System'
 
 # Columns definitions
-SYSTEM_CUR_CFG          = 'cur_cfg'
-SYSTEM_NTP_STATUS       = 'ntp_status'
-SYSTEM_NTP_STATISTICS   = 'ntp_statistics'
+SYSTEM_CUR_CFG = 'cur_cfg'
+SYSTEM_NTP_STATUS = 'ntp_status'
+SYSTEM_NTP_STATISTICS = 'ntp_statistics'
 NTP_ASSOCIATION_ADDRESS = 'address'
-NTP_ASSOCIATION_STATUS  = 'association_status'
+NTP_ASSOCIATION_STATUS = 'association_status'
+
 
 class NTPTransactionMgr(object):
+
     def __init__(self, location=None):
         '''
         Create a IDL connection to the OVSDB and register all the
@@ -68,19 +69,19 @@ class NTPTransactionMgr(object):
         self.schema_helper = ovs.db.idl.SchemaHelper(
             location=ovs_schema)
         self.schema_helper.register_columns(SYSTEM_TABLE,
-                                       [SYSTEM_NTP_STATUS,
-                                        SYSTEM_NTP_STATISTICS,
-                                        SYSTEM_CUR_CFG])
+                                            [SYSTEM_NTP_STATUS,
+                                             SYSTEM_NTP_STATISTICS,
+                                             SYSTEM_CUR_CFG])
         self.schema_helper.register_columns(NTP_ASSOCIATION_TABLE,
-                                       [NTP_ASSOCIATION_ADDRESS,
-                                       NTP_ASSOCIATION_STATUS])
+                                            [NTP_ASSOCIATION_ADDRESS,
+                                             NTP_ASSOCIATION_STATUS])
         self.idl = ovs.db.idl.Idl(def_db, self.schema_helper)
         self.address = None
         while not self.idl.run():
             sleep(.1)
 
     def set_ntp_association_status(self, row, entry):
-        setattr(row, 'association_status' , entry)
+        setattr(row, 'association_status', entry)
 
     def find_row_by_ip_addr(self, server_ip_addr):
         '''
@@ -91,7 +92,8 @@ class NTPTransactionMgr(object):
         '''
         tbl_found = False
         ovs_rec = None
-        for ovs_rec in self.idl.tables[NTP_ASSOCIATION_TABLE].rows.itervalues():
+        for ovs_rec in \
+                self.idl.tables[NTP_ASSOCIATION_TABLE].rows.itervalues():
             if ovs_rec.address == server_ip_addr:
                 tbl_found = True
                 break
@@ -101,47 +103,41 @@ class NTPTransactionMgr(object):
         '''
         Update a row with NTP Association table with latest modified values.
         '''
-        for k,v in entry["associations_info"].iteritems():
-          server_ip_addr = k
-          row, row_found = self.find_row_by_ip_addr(server_ip_addr)
-          if row_found:
-              self.set_ntp_association_status(row, v)
+        for k, v in entry["associations_info"].iteritems():
+            server_ip_addr = k
+            row, row_found = self.find_row_by_ip_addr(server_ip_addr)
+            if row_found:
+                self.set_ntp_association_status(row, v)
         return
 
     def update_system_table(self, entry):
         '''
         Update a SYSTEM table with global NTP statistics and uptime info.
         '''
-        ntp_status = {}
         ovs_rec = None
         for ovs_rec in self.idl.tables[SYSTEM_TABLE].rows.itervalues():
-          break
-        setattr(ovs_rec, 'ntp_status' , entry["status"])
-        setattr(ovs_rec, 'ntp_statistics' , entry["statistics"])
+            break
+        setattr(ovs_rec, 'ntp_status', entry["status"])
+        setattr(ovs_rec, 'ntp_statistics', entry["statistics"])
         return ovs_rec
 
     def update_info(self, ntp_info):
         self.txn = ovs.db.idl.Transaction(self.idl)
-        #Update NTP associations table
+        # Update NTP associations table
         self.update_row_in_ntp_association_table(ntp_info)
-        #Update NTP status with SYSTEM table
-        row = self.update_system_table(ntp_info)
+        # Update NTP status with SYSTEM table
+        self.update_system_table(ntp_info)
         status = self.txn.commit_block()
         if status != ovs.db.idl.Transaction.SUCCESS:
             vlog.err("ops_ntpd_sync_mgr update_row for ntp config in SYSTEM \
                     table failed")
 
     def close(self):
-       self.idl.close()
-       return status
+        self.idl.close()
+
 
 def ops_ntpd_sync_mgr_run(transaction_queue):
     ops_ntpd_sync_mgr = NTPTransactionMgr()
-    def_ntp_association_entry = {"address": "*",
-                             "association_status": { "*" },
-                             "status": { "*" },
-                             "statistics": { "*" }
-                             }
     while(True):
         str_obj = transaction_queue.get()
         if str_obj == "shutdown":

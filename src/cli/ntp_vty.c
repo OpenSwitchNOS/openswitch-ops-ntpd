@@ -1,7 +1,7 @@
 /* NTP CLI commands
  *
  * Copyright (C) 1997, 98 Kunihiro Ishiguro
- * Copyright (C) 2015-2016 Hewlett Packard Enterprise Development LP
+ * Copyright (C) 2016 Hewlett Packard Enterprise Development LP
  *
  * GNU Zebra is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -95,40 +95,6 @@ vtysh_ovsdb_ntp_auth_enable_set(ntp_cli_ntp_auth_enable_params_t *pntp_auth_enab
     /* End of transaction. */
     END_DB_TXN(ntp_auth_enable_txn);
 }
-
-#if 0
-static void
-vtysh_ovsdb_ntp_clear_stats()
-{
-    const struct ovsrec_system *ovs_system = NULL;
-    struct ovsdb_idl_txn *ntp_stats_txn = NULL;
-
-    /* Start of transaction */
-    START_DB_TXN(ntp_stats_txn);
-
-    /* Get access to the System Table */
-    ovs_system = ovsrec_system_first(idl);
-    if (NULL == ovs_system) {
-         vty_out(vty, "Could not access the System Table\n");
-         ERRONEOUS_DB_TXN(ntp_stats_txn, "Could not access the System Table");
-    }
-
-    smap_replace((struct smap *)&ovs_system->ntp_statistics, SYSTEM_NTP_STATS_PKTS_RCVD, NTP_DEFAULT_ZERO_STR);
-    smap_replace((struct smap *)&ovs_system->ntp_statistics, SYSTEM_NTP_STATS_PKTS_CUR_VER, NTP_DEFAULT_ZERO_STR);
-    smap_replace((struct smap *)&ovs_system->ntp_statistics, SYSTEM_NTP_STATS_PKTS_OLD_VER, NTP_DEFAULT_ZERO_STR);
-    smap_replace((struct smap *)&ovs_system->ntp_statistics, SYSTEM_NTP_STATS_PKTS_BAD_LEN_OR_FORMAT, NTP_DEFAULT_ZERO_STR);
-    smap_replace((struct smap *)&ovs_system->ntp_statistics, SYSTEM_NTP_STATS_PKTS_AUTH_FAILED, NTP_DEFAULT_ZERO_STR);
-    smap_replace((struct smap *)&ovs_system->ntp_statistics, SYSTEM_NTP_STATS_PKTS_DECLINED, NTP_DEFAULT_ZERO_STR);
-    smap_replace((struct smap *)&ovs_system->ntp_statistics, SYSTEM_NTP_STATS_PKTS_RESTRICTED, NTP_DEFAULT_ZERO_STR);
-    smap_replace((struct smap *)&ovs_system->ntp_statistics, SYSTEM_NTP_STATS_PKTS_RATE_LIMITED, NTP_DEFAULT_ZERO_STR);
-    smap_replace((struct smap *)&ovs_system->ntp_statistics, SYSTEM_NTP_STATS_PKTS_KOD_RESPONSES, NTP_DEFAULT_ZERO_STR);
-
-    ovsrec_system_set_ntp_statistics(ovs_system, &ovs_system->ntp_statistics);
-
-    /* End of transaction. */
-    END_DB_TXN(ntp_stats_txn);
-}
-#endif
 
 /*================================================================================================*/
 /* NTP internal server name validation functions */
@@ -1032,46 +998,6 @@ DEFUN_NO_FORM ( vtysh_set_ntp_trusted_key,
         NTP_TRUST_KEY_STR
         NTP_KEY_NUM_STR
       );
-
-/*================================================================================================*/
-
-/*
- * Function       : ntp_vty_init
- * Responsibility : install all the CLIs in the respective contexts.
- */
-
-void
-ntp_vty_init (void)
-{
-    /* SHOW CMDS */
-    install_element (VIEW_NODE, &vtysh_show_ntp_associations_cmd);
-    install_element (ENABLE_NODE, &vtysh_show_ntp_associations_cmd);
-
-    install_element (VIEW_NODE, &vtysh_show_ntp_status_cmd);
-    install_element (ENABLE_NODE, &vtysh_show_ntp_status_cmd);
-
-    install_element (VIEW_NODE, &vtysh_show_ntp_statistics_cmd);
-    install_element (ENABLE_NODE, &vtysh_show_ntp_statistics_cmd);
-
-    install_element (VIEW_NODE, &vtysh_show_ntp_trusted_keys_cmd);
-    install_element (ENABLE_NODE, &vtysh_show_ntp_trusted_keys_cmd);
-
-    install_element (VIEW_NODE, &vtysh_show_ntp_authentication_keys_cmd);
-    install_element (ENABLE_NODE, &vtysh_show_ntp_authentication_keys_cmd);
-
-    /* CONFIG CMDS */
-    install_element (CONFIG_NODE, &vtysh_set_ntp_server_cmd);
-    install_element (CONFIG_NODE, &no_vtysh_set_ntp_server_cmd);
-
-    install_element (CONFIG_NODE, &vtysh_set_ntp_authentication_enable_cmd);
-    install_element (CONFIG_NODE, &no_vtysh_set_ntp_authentication_enable_cmd);
-
-    install_element (CONFIG_NODE, &vtysh_set_ntp_authentication_key_cmd);
-    install_element (CONFIG_NODE, &no_vtysh_set_ntp_authentication_key_cmd);
-
-    install_element (CONFIG_NODE, &vtysh_set_ntp_trusted_key_cmd);
-    install_element (CONFIG_NODE, &no_vtysh_set_ntp_trusted_key_cmd);
-}
 
 /*================================================================================================*/
 

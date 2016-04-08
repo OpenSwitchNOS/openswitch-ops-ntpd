@@ -1,6 +1,6 @@
 /* Ntp CLI commands header file
  *
- * Copyright (C) 2015-2016 Hewlett Packard Enterprise Development LP
+ * Copyright (C) 2016 Hewlett Packard Enterprise Development LP
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
