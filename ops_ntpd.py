@@ -494,14 +494,17 @@ def ops_ntpd_sync_updates_to_ovsdb():
     ntpd_updates["associations_info"] = {}
     ntpd_updates["statistics"] = {}
     ntpd_updates["status"] = {}
-    ops_ntpd_get_ntpd_associations_info(ntpd_updates)
-    ops_ntpd_get_ntpd_global_status(ntpd_updates)
-    str_ntpd_updates = json.dumps(ntpd_updates)
-    vlog.dbg("Sync information is \n %s" % (
-        pprint.pformat(ntpd_updates, indent=5)))
+    try:
+        ops_ntpd_get_ntpd_associations_info(ntpd_updates)
+        ops_ntpd_get_ntpd_global_status(ntpd_updates)
+        str_ntpd_updates = json.dumps(ntpd_updates)
+        vlog.dbg("Sync information is \n %s" % (
+            pprint.pformat(ntpd_updates, indent=5)))
 
-    ops_ntpd_send_info_to_transaction_mgr(str_ntpd_updates)
-    vlog.dbg("Sync NTPD -> OVSDB : done")
+        ops_ntpd_send_info_to_transaction_mgr(str_ntpd_updates)
+        vlog.dbg("Sync NTPD -> OVSDB : done")
+    except Exception:
+        vlog.info("Unable to Sync NTPD -> OVSDB")
 
 
 def ops_ntpd_check_updates_with_ntp_associations(l_ntpa_map, trigger_reconfig):
