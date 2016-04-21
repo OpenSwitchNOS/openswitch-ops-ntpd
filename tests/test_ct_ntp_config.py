@@ -634,6 +634,7 @@ class ntpConfigTest(OpsVsiTest):
             info('\n### Server (with long server name) addition test PASSED ###')
             info('\n### === Server (with long server name) addition test END === ###\n')
 
+@pytest.mark.skipif(True, reason="Disable test from old framework")
 class TestNtpConfig:
 
         def setup(self):
