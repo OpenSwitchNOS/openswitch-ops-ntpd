@@ -451,6 +451,8 @@ def ops_ntpd_get_ntpd_associations_info(ntpd_updates):
         assoc_info[NTP_ASSOC_REFERENCE_TIME] = \
             associations_info_table[address][NTPQ_REFERENCE_TIME]
         ntpd_updates["associations_info"][address] = assoc_info
+        if assoc_info[NTP_ASSOC_PEER_STATUS_WORD] == "system_peer":
+            os.system("hwclock -w")
 
 
 def ops_ntpd_get_ntpd_global_status(ntpd_updates):
