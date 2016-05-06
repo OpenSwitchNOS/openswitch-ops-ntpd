@@ -1001,6 +1001,42 @@ DEFUN_NO_FORM ( vtysh_set_ntp_trusted_key,
 
 /*================================================================================================*/
 
+static void
+ntp_ovsdb_init()
+{
+    /* Add System Table */
+    ovsdb_idl_add_table(idl, &ovsrec_table_system);
+
+    /* Add columns in System Table */
+    ovsdb_idl_add_column(idl, &ovsrec_system_col_ntp_config);
+    ovsdb_idl_add_column(idl, &ovsrec_system_col_ntp_statistics);
+    ovsdb_idl_add_column(idl, &ovsrec_system_col_ntp_status);
+
+    /* Add VRF Table */
+    ovsdb_idl_add_table(idl, &ovsrec_table_vrf);
+
+    /* Add columns in VRF Table */
+    ovsdb_idl_add_column(idl, &ovsrec_vrf_col_name);
+
+    /* Add NTP Association Table */
+    ovsdb_idl_add_table(idl, &ovsrec_table_ntp_association);
+
+    /* Add columns in NTP Association Table */
+    ovsdb_idl_add_column(idl, &ovsrec_ntp_association_col_address);
+    ovsdb_idl_add_column(idl, &ovsrec_ntp_association_col_association_status);
+    ovsdb_idl_add_column(idl, &ovsrec_ntp_association_col_vrf);
+    ovsdb_idl_add_column(idl, &ovsrec_ntp_association_col_key_id);
+    ovsdb_idl_add_column(idl, &ovsrec_ntp_association_col_association_attributes);
+
+    /* Add NTP Keys Table */
+    ovsdb_idl_add_table(idl, &ovsrec_table_ntp_key);
+
+    /* Add columns in NTP Keys Table */
+    ovsdb_idl_add_column(idl, &ovsrec_ntp_key_col_key_id);
+    ovsdb_idl_add_column(idl, &ovsrec_ntp_key_col_key_password);
+    ovsdb_idl_add_column(idl, &ovsrec_ntp_key_col_trust_enable);
+}
+
 /* Initialize ops-ntpd cli node.
  */
 void cli_pre_init(void)
@@ -1008,6 +1044,8 @@ void cli_pre_init(void)
     /* ops-ntpd doesn't have any context level cli commands.
      * To load ops-ntpd cli shared libraries at runtime, this function is required.
      */
+    /* Add tables/columns needed for NTP config commands */
+    ntp_ovsdb_init();
 }
 
 /* Initialize ops-ntpd cli element.
