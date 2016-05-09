@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from pytest import mark
 
 TOPOLOGY = """
 #
@@ -671,7 +672,7 @@ def ntp_add_server_with_long_server_name(dut, step):
     step('\n### === server (with long server name) addition test end === ###'
          '\n')
 
-
+@mark.OPS_NTPD
 def test_ct_ntp_config(topology, step):
     ops1 = topology.get("ops1")
     assert ops1 is not None
