@@ -593,7 +593,8 @@ vtysh_ovsdb_show_ntp_associations()
 
 
         buf = smap_get(&ntp_assoc_row->association_status, NTP_ASSOC_STATUS_REMOTE_PEER_ADDRESS);
-        vty_out(vty, "  %15s", ((buf) ? buf : ""));
+        snprintf(dest, sizeof(dest), "%s", buf);
+        vty_out(vty, "  %15s", dest);
 
         buf = smap_get(&ntp_assoc_row->association_attributes, NTP_ASSOC_ATTRIB_VERSION);
         vty_out(vty, "  %3s", ((buf) ? buf : ""));
@@ -605,7 +606,8 @@ vtysh_ovsdb_show_ntp_associations()
         }
 
         buf = smap_get(&ntp_assoc_row->association_status, NTP_ASSOC_STATUS_REMOTE_PEER_REF_ID);
-        vty_out(vty, "  %15s", ((buf) ? buf : ""));
+        snprintf(dest, sizeof(dest), "%s", buf);
+        vty_out(vty, "  %15s", dest);
 
         buf = smap_get(&ntp_assoc_row->association_status, NTP_ASSOC_STATUS_STRATUM);
         vty_out(vty, "  %2s", ((buf) ? buf : ""));
