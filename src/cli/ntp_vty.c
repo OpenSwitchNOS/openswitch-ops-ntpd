@@ -549,14 +549,17 @@ vtysh_ovsdb_show_ntp_associations()
     const struct ovsrec_ntp_association *ntp_assoc_row = NULL;
     int i = 0;
     const char *buf = NULL;
-    char dest[16];
+    char ser_name[39];
+    char rem_info[16];
 
-    vty_out(vty, "----------------------------------------------------------------------------------------------------------------------\n");
-    vty_out(vty, " %3s  %15s  %15s  %3s  %5s",
+    vty_out(vty, "------------------------------------------------------------------------------"
+                 "----------------------------------------------------------------\n");
+    vty_out(vty, " %3s  %39s  %15s  %3s  %5s",
         "ID", "NAME", "REMOTE", "VER", "KEYID");
     vty_out(vty, "  %15s  %2s  %1s  %4s  %4s  %5s  %7s  %6s  %6s\n",
         "REF-ID", "ST", "T", "LAST", "POLL", "REACH", "DELAY", "OFFSET", "JITTER");
-    vty_out(vty, "----------------------------------------------------------------------------------------------------------------------\n");
+    vty_out(vty, "------------------------------------------------------------------------------"
+                 "----------------------------------------------------------------\n");
 
     OVSREC_NTP_ASSOCIATION_FOR_EACH(ntp_assoc_row, idl) {
         buf = smap_get(&ntp_assoc_row->association_status, NTP_ASSOC_STATUS_PEER_STATUS_WORD);
@@ -584,16 +587,15 @@ vtysh_ovsdb_show_ntp_associations()
             vty_out(vty, " "); /* Value not set - Same as NTP_ASSOC_STATUS_PEER_STATUS_WORD_REJECT */
         }
 
-        //buf = smap_get(&ntp_assoc_row->association_status, NTP_ASSOC_STATUS_ASSOCID);
-        //vty_out(vty, "%5s", ((buf) ? buf : ""));
         vty_out(vty, "%3d", ++i);
 
-        snprintf(dest, sizeof(dest), "%s", ntp_assoc_row->address);
-        vty_out(vty, "  %15s", dest);
+        snprintf(ser_name, sizeof(ser_name), "%s", ntp_assoc_row->address);
+        vty_out(vty, "  %39s", ser_name);
 
 
         buf = smap_get(&ntp_assoc_row->association_status, NTP_ASSOC_STATUS_REMOTE_PEER_ADDRESS);
-        vty_out(vty, "  %15s", ((buf) ? buf : ""));
+        snprintf(rem_info, sizeof(rem_info), "%s", buf);
+        vty_out(vty, "  %15s", rem_info);
 
         buf = smap_get(&ntp_assoc_row->association_attributes, NTP_ASSOC_ATTRIB_VERSION);
         vty_out(vty, "  %3s", ((buf) ? buf : ""));
@@ -605,7 +607,8 @@ vtysh_ovsdb_show_ntp_associations()
         }
 
         buf = smap_get(&ntp_assoc_row->association_status, NTP_ASSOC_STATUS_REMOTE_PEER_REF_ID);
-        vty_out(vty, "  %15s", ((buf) ? buf : ""));
+        snprintf(rem_info, sizeof(rem_info), "%s", buf);
+        vty_out(vty, "  %15s", rem_info);
 
         buf = smap_get(&ntp_assoc_row->association_status, NTP_ASSOC_STATUS_STRATUM);
         vty_out(vty, "  %2s", ((buf) ? buf : ""));
@@ -654,7 +657,8 @@ vtysh_ovsdb_show_ntp_associations()
         vty_out(vty, "\n");
     }
 
-    vty_out(vty, "----------------------------------------------------------------------------------------------------------------------\n");
+    vty_out(vty, "------------------------------------------------------------------------------"
+                 "----------------------------------------------------------------\n");
 }
 
 static void
