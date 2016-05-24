@@ -37,7 +37,7 @@ def ntp_auth_enable_disable_config(dut, step):
     lines = dump.splitlines()
     count = 0
     for line in lines:
-        if "ntp authentication is enabled" in line:
+        if "NTP authentication is enabled" in line:
             step('\n### auth has been enabled as per show cli - passed ###')
             count = count + 1
 
@@ -56,7 +56,7 @@ def ntp_auth_enable_disable_config(dut, step):
     dump = dut("show ntp status")
     lines = dump.splitlines()
     for line in lines:
-        if "ntp authentication is disabled" in line:
+        if "NTP authentication is disabled" in line:
             step('\n### auth has been disabled as per show cli - passed ###')
             count = count + 1
 
@@ -66,12 +66,12 @@ def ntp_auth_enable_disable_config(dut, step):
     lines = dump.splitlines()
     for line in lines:
         if "ntp authentication enable" in line:
-            print('\n### auth has been enabled as per running-config - '
-                  'failed ###')
+            '\n### auth has been enabled as per running-config - '
+            'failed ###'
             count = count - 1
 
-    assert (count == 4,
-            print('\n### authentication enable disable test failed ###'))
+    assert count == 4, \
+        '\n### authentication enable disable test failed ###'
 
     step('\n### authentication enable disable test passed ###')
     step('\n### === authentication enable disable test end === ###\n')
@@ -98,8 +98,8 @@ def ntp_valid_auth_key_add(dut, step):
             step('\n### valid auth-key present in running-config - passed')
             count = count + 1
 
-    assert (count == 2,
-            print('\n### valid auth-key addition test failed ###'))
+    assert count == 2,\
+            '\n### valid auth-key addition test failed ###'
 
     step('\n### valid auth-key addition test passed ###')
     step('\n### === valid auth-key addition test end === ###\n')
@@ -128,8 +128,8 @@ def ntp_valid_auth_key_delete(dut, step):
                  'deleting it')
             count = count - 1
 
-    assert (count == 2,
-            print('\n### valid auth-key deletion test failed ###'))
+    assert count == 2,\
+            '\n### valid auth-key deletion test failed ###'
 
     step('\n### valid auth-key deletion test passed ###')
     step('\n### === auth-key deletion test end === ###\n')
@@ -146,8 +146,8 @@ def ntp_invalid_auth_key_add(dut, step):
     count = count + 1
     for line in lines:
         if ("0" in line and "password0" in line):
-            print('\n### invalid auth-key present as per show cli - '
-                  'failed ###')
+            '\n### invalid auth-key present as per show cli - '
+            'failed ###'
             count = count - 1
 
     ''' now check the running config '''
@@ -156,11 +156,11 @@ def ntp_invalid_auth_key_add(dut, step):
     lines = dump.splitlines()
     for line in lines:
         if "ntp authentication-key 0 md5 password0" in line:
-            print('\n### invalid auth-key present in running-config - failed')
+            '\n### invalid auth-key present in running-config - failed'
             count = count - 1
 
-    assert (count == 2,
-            print('\n### invalid auth-key addition test failed ###'))
+    assert count == 2,\
+            '\n### invalid auth-key addition test failed ###'
 
     step('\n### invalid auth-key addition test passed ###')
     step('\n### === invalid auth-key addition test end === ###\n')
@@ -178,8 +178,8 @@ def ntp_short_pwd_add(dut, step):
     count = count + 1
     for line in lines:
         if ("2" in line and "short" in line):
-            print('\n### invalid (short) auth-key password present as per '
-                  'show cli - failed ###')
+            '\n### invalid (short) auth-key password present as per '
+            'show cli - failed ###'
             count = count - 1
 
     ''' now check the running config '''
@@ -188,13 +188,12 @@ def ntp_short_pwd_add(dut, step):
     lines = dump.splitlines()
     for line in lines:
         if "ntp authentication-key 2 md5 short" in line:
-            print('\n### invalid (short) auth-key password present in '
-                  'running-config - failed')
+            '\n### invalid (short) auth-key password present in '
+            'running-config - failed'
             count = count - 1
 
-    assert (count == 2,
-            print('\n### invalid (short) auth-key password addition test '
-                  'failed ###'))
+    assert count == 2,\
+            '\n### invalid (short) auth-key password addition test failed ###'
 
     step('\n### invalid (short) auth-key password addition test passed ###')
     step('\n### === invalid (short) auth-key password addition test end ==='
@@ -213,8 +212,8 @@ def ntp_tool_on_gpwd_add(dut, step):
     count = count + 1
     for line in lines:
         if ("17" in line and "longerthansixteen" in line):
-            print('\n### invalid (too-long) auth-key password present as per '
-                  'show cli - failed ###')
+            '\n### invalid (too-long) auth-key password present as per '
+            'show cli - failed ###'
             count = count - 1
 
     ''' now check the running config '''
@@ -223,13 +222,12 @@ def ntp_tool_on_gpwd_add(dut, step):
     lines = dump.splitlines()
     for line in lines:
         if "ntp authentication-key 17 md5 longerthansixteen" in line:
-            print('\n### invalid (too-long) auth-key password present in '
-                  'running-config - failed')
+            '\n### invalid (too-long) auth-key password present in '
+            'running-config - failed'
             count = count - 1
 
-    assert (count == 2,
-            print('\n### invalid (too-long) auth-key password addition test'
-                  ' failed ###'))
+    assert count == 2,\
+            '\n### invalid (too-long) auth-key password addition test failed ###'
 
     step('\n### invalid (too-long) auth-key password addition test passed '
          '###')
@@ -260,8 +258,8 @@ def ntp_add_server_no_options(dut, step):
                  'passed ###')
             count = count + 1
 
-    assert (count == 2,
-            print('\n### server (with no options) addition test failed ###'))
+    assert count == 2,\
+            '\n### server (with no options) addition test failed ###'
 
     step('\n### server (with no options) addition test passed ###')
     step('\n### === server (with no options) addition test end === ###\n')
@@ -291,9 +289,8 @@ def ntp_add_server_prefer_option(dut, step):
                  'config - passed ###')
             count = count + 1
 
-    assert (count == 2,
-            print('\n### server (with prefer options) addition test failed '
-                  '###'))
+    assert count == 2,\
+            '\n### server (with prefer options) addition test failed ###'
 
     step('\n### server (with prefer options) addition test passed ###')
     step('\n### === server (with prefer option) addition test end === ###\n')
@@ -322,9 +319,8 @@ def ntp_add_server_valid_version_option(dut, step):
                  'config - passed ###')
             count = count + 1
 
-    assert (count == 2,
-            print('\n### server (with version option) addition test failed'
-                  ' ###'))
+    assert count == 2,\
+            '\n### server (with version option) addition test failed ###'
 
     step('\n### server (with version option) addition test passed ###')
     step('\n### === server (with version option) addition test end === ###\n')
@@ -341,8 +337,8 @@ def ntp_add_server_invalid_version_option(dut, step):
     count = count + 1
     for line in lines:
         if ("4.4.4.4" in line and "5" in line):
-            print('\n### server (with invalid version option) present as per '
-                  'show cli - failed ###')
+            '\n### server (with invalid version option) present as per '
+            'show cli - failed ###'
             count = count - 1
 
     ''' now check the running config '''
@@ -351,13 +347,12 @@ def ntp_add_server_invalid_version_option(dut, step):
     lines = dump.splitlines()
     for line in lines:
         if ("ntp server 4.4.4.4 version 5" in line):
-            print('\n### server (with invalid version option) present in '
-                  'running config - failed ###')
+            '\n### server (with invalid version option) present in '
+            'running config - failed ###'
             count = count - 1
 
-    assert (count == 2,
-            print('\n### server (with invalid version option) addition test'
-                  ' failed ###'))
+    assert count == 2,\
+            '\n### server (with invalid version option) addition test failed ###'
 
     step('\n### server (with invalid version option) addition test passed '
          '###')
@@ -389,8 +384,8 @@ def ntp_add_server_with_fqdn(dut, step):
                  ' ###')
             count = count + 1
 
-    assert (count == 2,
-            print('\n### server (with fqdn) addition test failed ###'))
+    assert count == 2,\
+            '\n### server (with fqdn) addition test failed ###'
 
     step('\n### server (with fqdn) addition test passed ###')
     step('\n### === server (with fqdn) addition test end === ###\n')
@@ -425,8 +420,8 @@ def ntp_add_server_with_invalid_server_name(dut, step):
             "127.25.25.25" in line or "230.25.25.25" in line or
             "250.25.25.25" in line or "0.1.1.1" in line
         ):
-            print('\n### server (with ill-formatted ) present as per show '
-                  'cli - failed ###')
+            '\n### server (with ill-formatted ) present as per show '
+            'cli - failed ###'
             count = count - 1
 
     ''' now check the running config '''
@@ -441,13 +436,13 @@ def ntp_add_server_with_invalid_server_name(dut, step):
             "ntp server 230.25.25.25" in line or
             "ntp server 250.25.25.25" in line or "0.1.1.1" in line
         ):
-            print('\n### server (with ill-formatted) present in running '
-                  'config - failed ###')
+            '\n### server (with ill-formatted) present in running '
+            'config - failed ###'
             count = count - 1
 
-    assert (count == 2,
-            print('\n### server (with invalid server name) addition test '
-                  'failed ###'))
+    assert count == 2,\
+            '\n### server (with invalid server name) addition test '\
+            'failed ###'
 
     step('\n### server (with invalid server name) addition test passed ###')
     step('\n### === server (with invalid server name) addition test end ==='
@@ -478,9 +473,9 @@ def ntp_add_server_key_id_option(dut, step):
                  ' - passed ###')
             count = count + 1
 
-    assert (count == 2,
-            print('\n### server (with key-id option) addition test failed '
-                  '###'))
+    assert count == 2,\
+            '\n### server (with key-id option) addition test failed '\
+            '###'
 
     step('\n### server (with key-id option) addition test passed ###')
     step('\n### === server (with key-id option) addition test end === ###\n')
@@ -510,8 +505,8 @@ def ntp_add_server_all_options(dut, step):
                  ' passed ###')
             count = count + 1
 
-    assert (count == 2,
-            print('\n### server (with all options) addition test failed ###'))
+    assert count == 2,\
+            '\n### server (with all options) addition test failed ###'
 
     step('\n### server (with all options) addition test passed ###')
     step('\n### === server (with all options) addition test end === ###\n')
@@ -519,7 +514,7 @@ def ntp_add_server_all_options(dut, step):
 
 def ntp_add_more_than_8_servers(dut, step):
     step('\n### === addition of more than 8 servers test start === ###')
-    morethan8serverserror = "maximum number of configurable ntp server limit "
+    morethan8serverserror = "Maximum number of configurable NTP server limit has been reached"
     "has been reached"
     dut("configure terminal")
     dut("ntp server 6.6.6.6")
@@ -527,8 +522,9 @@ def ntp_add_more_than_8_servers(dut, step):
     dut("ntp server 8.8.8.8")
 
     dump = dut("ntp server 9.9.9.9")
-    assert (morethan8serverserror in dump,
-            print('\n### more than 8 server addition test failed ###'))
+    print(dump)
+    assert morethan8serverserror in dump,\
+            '\n### more than 8 server addition test failed ###'
 
     dut("end")
 
@@ -551,9 +547,9 @@ def ntp_add_more_than_8_servers(dut, step):
         if ("ntp server 9.9.9.9" in line):
             count = count - 1
 
-    assert (count == 6,
-            print('\n### === addition of more than 8 servers test failed ==='
-                  ' ###'))
+    assert count == 6,\
+            '\n### === addition of more than 8 servers test failed ==='\
+            ' ###'
 
     step('\n### === addition of more than 8 servers test passed === ###')
     step('\n### === addition of more than 8 servers test end === ###')
@@ -572,8 +568,8 @@ def ntp_modify_8th_ntp_server(dut, step):
         if ("8.8.8.8" in line):
             server_version = line.split()[3]
             if server_version != "4":
-                print('\n### server configuration is not latest failed === '
-                      '###')
+                '\n### server configuration is not latest failed === '\
+                '###'
                 count = count - 1
             else:
                 count = count + 1
@@ -585,9 +581,9 @@ def ntp_modify_8th_ntp_server(dut, step):
         if ("ntp server 8.8.8.8 version 4" in line):
             count = count + 1
 
-    assert (count == 2,
-            print('\n### === modifying version for the 8th ntp association '
-                  'test failed === ###'))
+    assert count == 2,\
+            '\n### === modifying version for the 8th ntp association '\
+            'test failed === ###'
 
     step('\n### === modifying version for the 8th ntp association test passed'
          ' === ###')
@@ -606,8 +602,8 @@ def ntp_del_server(dut, step):
     count = count + 1
     for line in lines:
         if ("8.8.8.8" in line):
-            print('\n### server still present as per show cli - failed ###')
-            count = count - 1
+           '\n### server still present as per show cli - failed ###'
+           count = count - 1
 
     ''' now check the running config '''
     count = count + 1
@@ -615,11 +611,11 @@ def ntp_del_server(dut, step):
     lines = dump.splitlines()
     for line in lines:
         if ("ntp server 8.8.8.8" in line):
-            print('\n### server still present in running config - failed ###')
+            '\n### server still present in running config - failed ###'
             count = count - 1
 
-    assert (count == 2,
-            print('\n### server deletion test failed ###'))
+    assert count == 2,\
+            '\n### server deletion test failed ###'
 
     step('\n### server deletion test passed ###')
     step('\n### === server deletion test end === ###\n')
@@ -633,12 +629,11 @@ def ntp_add_server_with_long_server_name(dut, step):
 
     ''' long server name '''
     lines = dut("ntp server vabcdefghijklmnopqrstuvwxyzeabcdefghijklmnopqrstuvwxyzrabcdefghijklmnopqrstuvwxy version 4 prefer")
-    print(lines)
     if "NTP server name should be less than 57 characters" in lines:
         count += 1
-    assert (count == 0,
-            print('\n###  server (with max chars with server name) addition test failed'
-                  ' ###'))
+    assert count == 0,\
+            '\n###  server (with max chars with server name) addition test failed'\
+            ' ###'
 
     dut("ntp server 1.cr.pool.ntp.org version 4 prefer")
     dut("ntp server abcdefghijklmnopqrstuvwxyz")
@@ -672,9 +667,9 @@ def ntp_add_server_with_long_server_name(dut, step):
     dut("no ntp server ab")
     dut("exit")
 
-    assert (count == 4,
-            print('\n###  server (with long server name) addition test failed'
-                  ' ###'))
+    assert count == 4,\
+            '\n###  server (with long server name) addition test failed'\
+            ' ###'
 
     step('\n### server (with long server name) addition test passed ###')
     step('\n### === server (with long server name) addition test end === ###'
