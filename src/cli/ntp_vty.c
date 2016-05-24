@@ -434,6 +434,12 @@ ntp_server_sanitize_parameters(ntp_cli_ntp_server_params_t *pntp_server_params)
 {
     int retval = CMD_SUCCESS;
 
+    /* Check server_name to see if it exceeds maximum number of characters*/
+    if (strlen(pntp_server_params->server_name) > MAX_CHARS_IN_NTP_SERVER_NAME) {
+        vty_out(vty, "NTP server name should be less than 57 characters\n");
+        return CMD_ERR_NOTHING_TODO;
+    }
+
     /* Check the validity of server name */
     if (!ntp_internal_is_valid_server_name(pntp_server_params->server_name)) {
         vty_out(vty, "Invalid IP address%s", VTY_NEWLINE);
@@ -1088,7 +1094,6 @@ void cli_post_init(void)
     install_element (CONFIG_NODE, &no_vtysh_set_ntp_trusted_key_cmd);
 
     /* Installing running config sub-context with global config context */
-    retval = e_vtysh_error;
     retval = install_show_run_config_subcontext(e_vtysh_config_context,
                                      e_vtysh_config_context_ntp,
                                      &vtysh_config_context_ntp_clientcallback,

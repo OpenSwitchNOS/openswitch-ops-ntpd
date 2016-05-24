@@ -135,5 +135,6 @@ config_finish_result (enum ovsdb_idl_txn_status status)
 #define NTP_SHOW_STATISTICS_STR    "Show NTP Statistics information\n"
 #define NTP_SHOW_AUTH_KEYS_STR     "Show NTP Authentication Keys information\n"
 #define NTP_SHOW_TRUST_KEYS_STR    "Show NTP Trusted Keys information\n"
+#define MAX_CHARS_IN_NTP_SERVER_NAME 57
 
 #endif // _NTPD_VTY_H

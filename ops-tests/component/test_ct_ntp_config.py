@@ -629,8 +629,17 @@ def ntp_add_server_with_long_server_name(dut, step):
     step('\n### === server (with long server name) addition test start === '
          '###')
     dut("configure terminal")
+    count = 0
 
     ''' long server name '''
+    lines = dut("ntp server vabcdefghijklmnopqrstuvwxyzeabcdefghijklmnopqrstuvwxyzrabcdefghijklmnopqrstuvwxy version 4 prefer")
+    print lines
+    if "NTP server name should be less than 57 characters" in lines:
+        count += 1
+    assert (count == 0,
+            print('\n###  server (with max chars with server name) addition test failed'
+                  ' ###'))
+
     dut("ntp server 1.cr.pool.ntp.org version 4 prefer")
     dut("ntp server abcdefghijklmnopqrstuvwxyz")
     dut("ntp server 192.168.101.125")
