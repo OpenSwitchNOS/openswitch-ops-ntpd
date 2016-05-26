@@ -815,7 +815,7 @@ def ops_ntpd_start_ntpd(ntpd_info):
     global ntpd_command
     ntpd_process = None
     (conf_file, keys_file, log_file) = ntpd_info
-    ntpd_command = "ntpd -c %s -k %s -l %s" % (conf_file, keys_file, log_file)
+    ntpd_command = "ntpd -I eth0 -c %s -k %s -l %s" % (conf_file, keys_file, log_file)
     err, out = ops_ntpd_run_command(ntpd_command)
     if err != "":
         vlog.emer("%s" % (err))
