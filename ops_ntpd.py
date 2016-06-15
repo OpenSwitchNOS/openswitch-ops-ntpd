@@ -30,6 +30,7 @@ import time
 import signal
 import copy
 import hashlib
+import binascii
 import argparse
 import subprocess
 import json
@@ -237,7 +238,7 @@ def ops_ntpd_setup_ntpq_integration(ntp_working_dir_path):
     '''
     global ntpq_info, cmdline_str
     random_data = os.urandom(128)
-    controlkey_answer = hashlib.md5(random_data).hexdigest()[:16]
+    controlkey_answer = hashlib.sha224(random_data).hexdigest()[:16]
     ntpq_info = (controlkey, controlkey_answer)
     # Build a commandline string to execute
     cmdline_str = "ntpq -c \"keyid %d\" -c \"passwd %s\"" %\
