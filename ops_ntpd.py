@@ -87,7 +87,7 @@ translate_peer_status_word = {
     "sel_reject": "reject",
     "sel_falsetick": "falsetick",
     "sel_excess": "excess",
-    "sel_outlyer": "outlier",
+    "sel_outlier": "outlier",
     "sel_candidate": "candidate",
     "sel_backup": "backup",
     "sel_sys.peer": "system_peer",
