@@ -33,7 +33,8 @@ TOPOLOGY = """
 # Links
 hs1:1 -- sw2:1
 hs2:1 -- sw2:2
-ops1:1 -- sw2:3
+[force_name=eth0] ops1:eth0
+ops1:eth0 -- sw2:3
 """
 # Global Variable
 MGMT_IP_CONFIG = "172.17.0.1/24"
@@ -162,12 +163,12 @@ def test_ntpd_ft_auth_noauth_restart(topology, step):
     switch_ip = mgmtintdetails['ipv4'].split('/')[0]
 
     # Connectivity test
-    ping = hs1.libs.ping.ping(1, switch_ip)
-    assert ping['transmitted'] == ping['received'] == 1, "Ping failed between\
+    ping = hs1.libs.ping.ping(5, switch_ip)
+    assert ping['received'] > 0, "Ping failed between\
         host1 and the DUT"
 
     ping = hs2.libs.ping.ping(1, switch_ip)
-    assert ping['transmitted'] == ping['received'] == 1, "Ping failed between\
+    assert ping['received'] > 0, "Ping failed between\
         host2 and the DUT"
 
     # Configure NTP server profile and check the status
