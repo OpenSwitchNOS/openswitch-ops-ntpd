@@ -709,7 +709,7 @@ def ops_ntpd_check_updates_from_ovsdb():
                     ref_clock_id = value
                 if key == 'prefer':
                     prefer = value
-                if key == 'version':
+                if key == 'ntp_version':
                     ntp_version = value
         ops_ntpd_setup_ntp_config_map(
                 update_map, vrf, ip_address,
