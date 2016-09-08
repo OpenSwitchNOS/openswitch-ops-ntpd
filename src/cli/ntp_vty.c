@@ -674,6 +674,8 @@ vtysh_ovsdb_show_ntp_status()
     const char *buf = NULL;
     const struct ovsrec_ntp_association *ntp_assoc_row = NULL;
     bool status = 0;
+    char *timezone;
+    const struct ovsdb_datum *data = NULL;
 
     /* Get access to the System Table */
     ovs_system = ovsrec_system_first(idl);
@@ -706,7 +708,9 @@ vtysh_ovsdb_show_ntp_status()
                 vty_out(vty, "Time accuracy is within %s seconds\n", ((buf) ? buf : ""));
 
                 buf = smap_get(&ntp_assoc_row->association_status, NTP_ASSOC_STATUS_REFERENCE_TIME);
-                vty_out(vty, "Reference time: %s (UTC)\n", ((buf) ? buf : ""));
+                data = ovsrec_system_get_timezone(ovs_system, OVSDB_TYPE_STRING);
+                timezone = data->keys->string;
+                vty_out(vty, "Reference time: %s as per %s timezone\n", ((buf) ? buf : ""), timezone);
             }
         }
     }
